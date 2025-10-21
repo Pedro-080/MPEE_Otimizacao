@@ -1,3 +1,4 @@
+# flake8: noqa
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -19,13 +20,18 @@ class Geracao:
     def __init__(self, elementos_b02, funcao,tamanho_cromossomo):
         self.elementos_b02 = elementos_b02                          # Define os atributo da instância
         self.elementos_b10 = self.binary_to_decimal(elementos_b02)  #
+        self.funcao_alvo = funcao
         self.resultados =  self._calc_funcao(funcao)
         self.porcentagens = self._calc_percentual_selecao(self.resultados)
         self.dicionario_valores = self._dict_valores()
         self.intervalos_roleta = self.criar_roleta()
         self.tamanho_cromossomo = tamanho_cromossomo
         self.elementos_decendentes_b02 = None
-        self.elementos_decendentes_b10 = None       
+        self.elementos_decendentes_b10 = None
+        self.chance_mutacao_percent = 2    
+        self.chance_crossover_percent = 60
+        self.decendentes_b02 = self.gerar_decendentes()
+        self.decendentes_b10 = self.binary_to_decimal(self.decendentes_b02)
 
 
     def _dict_valores(self):
@@ -144,15 +150,16 @@ class Geracao:
         #     print(f"Execução {i}")
         #     # print(f"Tamanho da população é {len(self.elementos_b02)}")
         #     ...
+        elementos_decendentes_b02_mutados = []
         for elemento in elementos_decendentes_b02:
-            self.realizar_mutacao(elemento)
+            elementos_decendentes_b02_mutados.append(self.realizar_mutacao(elemento))
 
 
 
-        return elementos_decendentes_b02
+        return elementos_decendentes_b02_mutados
 
     def realizar_crossover(self, Pai, Mae):
-        Chance_crossover = 70
+        Chance_crossover = self.chance_crossover_percent
         valor_aleatorio = random.uniform(0, 100)
         
         if valor_aleatorio <= Chance_crossover:
@@ -185,14 +192,56 @@ class Geracao:
             return bin(Pai)[2:].zfill(self.tamanho_cromossomo)
 
     def realizar_mutacao (self, elemento_b02):
-        print(elemento_b02)
-        print(type(elemento_b02))        
+        chance_mutacao = self.chance_mutacao_percent
+
+        elemento_b02_mutado = []
+        for digito in elemento_b02:
+            valor_aleatorio = random.uniform(0, 100)
+            # print(f"mutacao chance: {valor_aleatorio}")
+
+            if valor_aleatorio <= chance_mutacao:
+                if digito == '0':
+                    elemento_b02_mutado.append('1')
+                elif digito == '1':
+                    elemento_b02_mutado.append('0')               
+            else: 
+                elemento_b02_mutado.append(digito)
+        elemento_b02_mutado = ''.join(elemento_b02_mutado)
+        # print (elemento_b02_mutado)
+        # print(f"in: {elemento_b02}")
+        # print(f"mutado: {elemento_b02_mutado}")
+        return elemento_b02_mutado
+
+
+        # print(type(elemento_b02))        
         ...
 
+    @classmethod
+    def executar_iteracoes(cls, Populacao_inicial, funcao, tamanho_cromossomo ,num_iteracoes=3 ):
+        """
+        Executa múltiplas iterações da classe
+        """
+        resultados = []
+        lista_atual = Populacao_inicial        
+
+        print(f"Entrada inicial: {lista_atual}")
+        
+        for iteracao in range(num_iteracoes):
+            # Cria nova instância com a lista atual
+            instancia = cls(lista_atual,
+                            funcao,
+                            tamanho_cromossomo)
 
 
-
-
+            # Executa a operação
+            lista_atual_b02 = instancia.decendentes_b02
+            lista_atual_b10 = instancia.decendentes_b10
+            resultados.append(lista_atual.copy())
+            print(f"Iteração {iteracao + 1}: {lista_atual_b02}")
+            print(f"Iteração {iteracao + 1}: {lista_atual_b10}")
+            print(f"Interval {iteracao + 1}: {instancia.intervalos_roleta}")
+        
+        return resultados
 
 # # Plotagem
 # plt.figure(figsize=(8, 5))
@@ -211,7 +260,7 @@ def funcao_x2(x):
     return x**2
 
 if __name__ == '__main__':
-    Tamanho_cromossomo = 10
+    Tamanho_cromossomo = 5
 
     limites  = np.arange(0, 32, 0.125)  # passo de 0.125
     funcao_alvo = "x**2"
@@ -223,14 +272,36 @@ if __name__ == '__main__':
                          ]
 
 
-    G1 = Geracao(Populacao_inicial,funcao_alvo,Tamanho_cromossomo)
+    Executar_Geracoes = Geracao.executar_iteracoes(Populacao_inicial,funcao_alvo,Tamanho_cromossomo,100)
+    print(f"\nResultado final: {Executar_Geracoes[-1]}")
+    # G1 = Geracao.executar_iteracoes((Populacao_inicial,funcao_alvo,Tamanho_cromossomo,3))
 
 
+    # print(f"Input G1: {G1.elementos_b02}")
+    # print(f"Input G1: {G1.elementos_b10}")
 
-    print(G1.elementos_b02)
-    print(G1.elementos_b10)
-    # print(G1.roleta_basica())
-    decendentes = G1.gerar_decendentes()
+    # G2 = Geracao(G1.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+    # print(f"Input G2: {G2.elementos_b02}")
+    # print(f"Input G2: {G2.elementos_b10}")
+
+    # print(f"output G2: {G2.decendentes_b02}")
+    # print(f"output G2: {G2.decendentes_b10}")
+
+    # G3 = Geracao(G2.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+
+
+    # # print(G1.roleta_basica())
+    # G1.gerar_decendentes()
+
+    # print(G1.decendentes_b02)
+    # print(G1.decendentes_b10)
+
+
+    
+
+
+    # print(decendentes)
+
     # print(decendentes)
 
     # print(G1.binary_to_decimal(decendentes))
