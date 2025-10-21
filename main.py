@@ -3,18 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
-# def binary_to_decimal(binary_string):
-#   """Converts a binary string to its decimal equivalent."""
-#   try:
-#     decimal_value = int(binary_string, 2)
-#     return decimal_value
-#   except ValueError:
-#     return "Invalid binary number"
-
-# def funcao (elemento):
-#     y = elemento ** 2 
-#     return y
-
 
 class Geracao:
     def __init__(self, elementos_b02, funcao,tamanho_cromossomo):
@@ -28,7 +16,7 @@ class Geracao:
         self.tamanho_cromossomo = tamanho_cromossomo
         self.elementos_decendentes_b02 = None
         self.elementos_decendentes_b10 = None
-        self.chance_mutacao_percent = 2    
+        self.chance_mutacao_percent = 1    
         self.chance_crossover_percent = 60
         self.decendentes_b02 = self.gerar_decendentes()
         self.decendentes_b10 = self.binary_to_decimal(self.decendentes_b02)
@@ -83,7 +71,7 @@ class Geracao:
         return percent_y  
         ...
 
-    def selecionar_pais(self):
+    # def selecionar_pais(self):
 
 
         Pai_01 = self.roleta_basica()
@@ -99,36 +87,43 @@ class Geracao:
         ...
 
     def criar_roleta(self):
-
-        dicionario = self.dicionario_valores
-        dicionario = dict(sorted(dicionario.items(), key=lambda x: x[1]))
-
-        # Criar intervalos para a roleta
+        # Criar uma lista com todos os elementos (permite duplicatas)
+        elementos_completos = list(zip(self.elementos_b10, self.porcentagens))
+        
+        # Ordenar por porcentagem
+        elementos_ordenados = sorted(elementos_completos, key=lambda x: x[1])
+        
+        # Criar intervalos
         intervalos = []
         inicio = 0
+        indice = 0
 
-        # print("\nIntervalos da roleta (ordenados por valores crescentes):")
-        for chave, valor in dicionario.items():
+        # print("\nIntervalos da roleta (com duplicatas):")
+        for chave, valor in elementos_ordenados:
             fim = inicio + valor
-            intervalos.append((inicio, fim, chave))
-            # print(f"Chave {chave}: [{inicio:.2f} - {fim:.2f}] (valor original: {dicionario[chave]})")
+            # Usar índice para garantir unicidade mesmo com chaves duplicadas
+            intervalos.append((inicio, fim, chave, indice))
+            # print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
             inicio = fim
+            indice += 1
 
+        # print(f"Soma total dos intervalos: {inicio:.2f}%")
         return intervalos
-    
+
     def girar_roleta(self):
         intervalos = self.intervalos_roleta
-        """Gira a roleta e retorna a chave correspondente"""
         valor_aleatorio = random.uniform(0, 100)
 
-        for inicio, fim, chave in intervalos:
+        for inicio, fim, chave, indice in intervalos:
             if inicio <= valor_aleatorio < fim:
-                # return chave, valor_aleatorio
                 return chave
 
-        if valor_aleatorio == 100:
-            # return intervalos[-1][2], valor_aleatorio
-            return intervalos[-1][2]
+        # Caso esteja exatamente no limite superior
+        return intervalos[-1][2]
+
+        # if valor_aleatorio == 100:
+        #     # return intervalos[-1][2], valor_aleatorio
+        #     return intervalos[-1][2]
 
 
 
@@ -141,7 +136,8 @@ class Geracao:
         for decendente in range(1,Tamanho_populacao+1):
             Pai = self.girar_roleta()
             Mae = self.girar_roleta()
-
+            # print(f"Pai: {Pai}")
+            # print(f"Mae: {Mae}")
             elementos_decendentes_b02.append(self.realizar_crossover(Pai,Mae))
             # self.realizar_crossover(Pai,Mae)
             # print(f"decendente {decendente}")
@@ -236,24 +232,12 @@ class Geracao:
             # Executa a operação
             lista_atual_b02 = instancia.decendentes_b02
             lista_atual_b10 = instancia.decendentes_b10
-            resultados.append(lista_atual.copy())
-            print(f"Iteração {iteracao + 1}: {lista_atual_b02}")
+            resultados.append(lista_atual_b10.copy())
+            # print(f"Iteração {iteracao + 1}: {lista_atual_b02}")
             print(f"Iteração {iteracao + 1}: {lista_atual_b10}")
-            print(f"Interval {iteracao + 1}: {instancia.intervalos_roleta}")
+            # print(f"Interval {iteracao + 1}: {instancia.intervalos_roleta}")
         
         return resultados
-
-# # Plotagem
-# plt.figure(figsize=(8, 5))
-# plt.plot(x, y, color='blue', label='f(x) = x²')
-
-# # Títulos e legendas
-# plt.title('Função Quadrática f(x) = x²')
-# plt.xlabel('x')
-# plt.ylabel('f(x)')
-# plt.grid(True)
-# plt.legend()
-# plt.show()
 
 
 def funcao_x2(x):
@@ -272,20 +256,66 @@ if __name__ == '__main__':
                          ]
 
 
-    Executar_Geracoes = Geracao.executar_iteracoes(Populacao_inicial,funcao_alvo,Tamanho_cromossomo,100)
+    Executar_Geracoes = Geracao.executar_iteracoes(Populacao_inicial,funcao_alvo,Tamanho_cromossomo,1000)
     print(f"\nResultado final: {Executar_Geracoes[-1]}")
-    # G1 = Geracao.executar_iteracoes((Populacao_inicial,funcao_alvo,Tamanho_cromossomo,3))
+
+
+
+
+
+    # G1 = Geracao(Populacao_inicial,funcao_alvo,Tamanho_cromossomo)
 
 
     # print(f"Input G1: {G1.elementos_b02}")
     # print(f"Input G1: {G1.elementos_b10}")
+    # print(f"output G1: {G1.decendentes_b02}")
+    # print(f"output G1: {G1.decendentes_b10}")
+
+
+    # # print(f"{G1.selecionar_pais()}")
+    # # print(G1.criar_roleta())
+
+
 
     # G2 = Geracao(G1.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+
+    # # print(f"intervalos: {G2.intervalos_roleta}")
+
+    # # for num in range (1,100):
+    # #     print(f"{num}: {G2.girar_roleta()}")
+
+    # print(f"Input G2: {G2.elementos_b02}")
+    # print(f"Input G2: {G2.elementos_b10}")
+    # print(f"output G2: {G2.decendentes_b02}")
+    # print(f"output G2: {G2.decendentes_b10}")
+
+    # G3 = Geracao(G2.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+    # print(f"Input G3: {G3.elementos_b02}")
+    # print(f"Input G3: {G3.elementos_b10}")
+    # print(f"output G3: {G3.decendentes_b02}")
+    # print(f"output G3: {G3.decendentes_b10}")
+
+    # G4 = Geracao(G3.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+    # print(f"Input G4: {G4.elementos_b02}")
+    # print(f"Input G4: {G4.elementos_b10}")
+    # print(f"output G4: {G4.decendentes_b02}")
+    # print(f"output G4: {G4.decendentes_b10}")
+
+    # G5 = Geracao(G4.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
+    # print(f"Input G5: {G5.elementos_b02}")
+    # print(f"Input G5: {G5.elementos_b10}")
+    # print(f"output G5: {G5.decendentes_b02}")
+    # print(f"output G5: {G5.decendentes_b10}")
+
+
+
+
+
     # print(f"Input G2: {G2.elementos_b02}")
     # print(f"Input G2: {G2.elementos_b10}")
 
-    # print(f"output G2: {G2.decendentes_b02}")
-    # print(f"output G2: {G2.decendentes_b10}")
+    # # print(f"output G2: {G2.decendentes_b02}")
+    # # print(f"output G2: {G2.decendentes_b10}")
 
     # G3 = Geracao(G2.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
 
