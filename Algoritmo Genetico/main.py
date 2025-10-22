@@ -256,7 +256,7 @@ if __name__ == '__main__':
                          ]
 
 
-    Executar_Geracoes = Geracao.executar_iteracoes(Populacao_inicial,funcao_alvo,Tamanho_cromossomo,1000)
+    Executar_Geracoes = Geracao.executar_iteracoes(Populacao_inicial,funcao_alvo,Tamanho_cromossomo,10)
     print(f"\nResultado final: {Executar_Geracoes[-1]}")
 
 
@@ -308,45 +308,4 @@ if __name__ == '__main__':
     # print(f"output G5: {G5.decendentes_b10}")
 
 
-
-
-
-    # print(f"Input G2: {G2.elementos_b02}")
-    # print(f"Input G2: {G2.elementos_b10}")
-
-    # # print(f"output G2: {G2.decendentes_b02}")
-    # # print(f"output G2: {G2.decendentes_b10}")
-
-    # G3 = Geracao(G2.decendentes_b02,funcao_alvo,Tamanho_cromossomo)
-
-
-    # # print(G1.roleta_basica())
-    # G1.gerar_decendentes()
-
-    # print(G1.decendentes_b02)
-    # print(G1.decendentes_b10)
-
-
-    
-
-
-    # print(decendentes)
-
-    # print(decendentes)
-
-    # print(G1.binary_to_decimal(decendentes))
-    # print(G1.girar_roleta())
-
-    # print(G1._sum_elementos())
-    # print(G1._percent_elemento())
-
-    # print(G1.resultados)
-    # print(G1.porcentagens)
-
-
-
-    # print(G1.selecionar_pais())
-
-    # for elemento in G1.elementos_b02:
-    #     print(f"{elemento} : {elemento_decimal}: {funcao(elemento_decimal)}")
 
