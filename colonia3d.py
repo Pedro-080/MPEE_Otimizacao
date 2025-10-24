@@ -11,9 +11,9 @@ from dados_entrada import perdas_OXLIP, perdas_GOLDENTUFT,perdas_COSMOS,perdas_O
 # CONFIGURAÇÕES ACO
 # ==========================================
 NFormigas = 20
-Iteracoes = 50
+Iteracoes = 10
 alpha = 1      # influência do feromônio
-beta = 2       # influência da heurística (1/distância)
+beta = 1       # influência da heurística (1/distância)
 rho = 0.1      # taxa de evaporação
 Q = 100        # quantidade de feromônio depositada
 
@@ -37,7 +37,7 @@ NCabos = camadas.shape[2]
 # Inicializar feromônio e heurística
 feromonio = np.ones_like(camadas)
 atratividade = np.zeros_like(camadas)
-atratividade[camadas > 0] = 1.0 / camadas[camadas > 0]
+atratividade[camadas > 0] = 1.0 / camadas[camadas > 0]  #Calcula n em todas as camadas
 
 # ==========================================
 # FUNÇÕES AUXILIARES
@@ -85,6 +85,8 @@ for iter in range(Iteracoes):
 
     for f in range(NFormigas):
         cidades = list(range(NCidades))
+        # print(f"Cidades: {cidades}")
+
         atual = random.choice(cidades)
         cidades.remove(atual)
         caminho = []
@@ -97,19 +99,21 @@ for iter in range(Iteracoes):
             atual = prox
             cidades.remove(atual)
             camada_atual = camada  # atualiza a camada atual da formiga
+        # print(caminho)
 
         # Fecha o ciclo
         camada_volta = random.randint(camada_atual, NCabos-1)
         caminho.append((atual, caminho[0][0], camada_volta))
 
         custo = custo_total(caminho, camadas)
+        print(f"custo: {custo}")    
         caminhos_formigas.append(caminho)
         custos.append(custo)
 
         if custo < melhor_custo:
             melhor_custo = custo
             melhor_caminho = caminho
-
+    print(f"=========================")
     # Atualiza feromônio
     feromonio *= (1 - rho)
     for caminho, custo in zip(caminhos_formigas, custos):

@@ -55,4 +55,5 @@ perdas_MAGNOLIA   = MAGNOLIA.array_calcular_perdas_percent(comprimento, Pot_acum
 perdas_MARIGOLD   = MARIGOLD.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC_100)
 
 
-print(perdas_MARIGOLD)
+# print(perdas_OXLIP)
+# print(perdas_MARIGOLD)
