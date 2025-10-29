@@ -5,8 +5,6 @@ from dados_entrada import perdas_OXLIP, perdas_GOLDENTUFT,perdas_COSMOS,perdas_O
 
 
 
-
-
 # ==========================================
 # CONFIGURAÇÕES ACO
 # ==========================================
@@ -125,3 +123,5 @@ print("\nMelhor caminho encontrado:")
 for (i, j, k) in melhor_caminho:
     print(f"{i} -> {j} (camada {k})")
 print(f"Custo total: {melhor_custo:.3f}")
+
+
