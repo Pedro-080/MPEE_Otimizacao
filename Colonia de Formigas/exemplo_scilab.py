@@ -39,6 +39,9 @@ d = np.array([
 NCidades = d.shape[0]
 y        = d.shape[1]
 
+
+print(f"NCidades:{NCidades}")
+
 #Definição da matriz Tau com os feromônios iniciais
 Feromonio = np.ones((NCidades,NCidades)) *0.001
 
@@ -54,7 +57,7 @@ n = inverter_matriz(d)
 
 
 
-inter=0
+inter=1
 while inter <= iteracoes:
     #Definição da função objetivo
     FuncObj      = np.zeros((fo,1))
@@ -63,7 +66,43 @@ while inter <= iteracoes:
     Matriz_Infor = np.zeros((fo,NCidades))
     print(inter)
 
-    for f in range(1,fo+1):
-        print(f"f: {f}")
+    # print(Matriz_Infor)
+
+    for f in range(0,fo):
+        Matriz_Infor[f][1] = np.random.randint(0,NCidades)
+        # print(f" Matriz_Infor({f},1):{ Matriz_Infor[f][1]}")
+        Part = int(Matriz_Infor[f][1])
+        ProxCidade = Part
+        # print(f"type:{type(Part)}")
+        # print(f"Part:{Part}")
+
+        # print(Feromonio)
+        Tot = np.sum(Feromonio[Part])
+        # print(f"Tot:{Tot}")
+        # print(f"f: {f}")
+        # print(f"{rand}")
+        for i in range(1,NCidades):
+            TesteFer = 0
+            while TesteFer == 0:
+                teste = 0
+                Roleta =np.random.random()*Tot
+                TotFer = 0
+                for k in range(1,NCidades):
+                    TotFer = TotFer + Feromonio[ProxCidade][k]
+                    if Roleta < TotFer & teste == 0:
+                        ProxCidade = k
+                        teste = 1
+                        ...
+                    ...
+                TesteFer = 1
+                for k in range(1,NCidades):
+                    if ProxCidade == Matriz_Infor[f][k]:
+                        TesteFer = 0
+                if TesteFer == 1:
+                    Tot = np.sum(Feromonio[ProxCidade])
+                    ...
+            
+            Matriz_Infor[f][i] = ProxCidade
+            FuncObj[f] = FuncObj[f] + k 
 
     inter += 1
