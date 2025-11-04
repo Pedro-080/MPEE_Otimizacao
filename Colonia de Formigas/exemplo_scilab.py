@@ -1,3 +1,4 @@
+# flake8: noqa
 import numpy as np
 import random
 
@@ -22,8 +23,16 @@ d = np.array([
     [181.9, 180.2, 188.7, 81.6, 54.4, 27.2, 0, 27.2],
     [209.1, 207.4, 215.9, 108.8, 81.6, 54.4, 27.2, 0]
 ])
+# d = np.array([
+#     [0, 2, 9, 10, 7],
+#     [1, 0, 6, 4, 3],
+#     [15, 7, 0, 8, 3],
+#     [6, 3, 12, 0, 11],
+#     [9, 7, 5, 6, 0]
+# ])
 
 SETOR = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
 
 NCidades = d.shape[0]
 y = d.shape[1]
@@ -39,7 +48,7 @@ fo = 20                                      # Número de formigas, duas por cid
 Feromonio = np.ones((NCidades, NCidades)) * 0.001  # Deposição inicial de feromonio
 Matriz_Infor = np.zeros((fo, NCidades))     # Caminho das formigas
 Matriz_Infor_Temp = Matriz_Infor.copy()     # Informativo das cidades
-iteracoes = 5                               # Número de iterações
+iteracoes = 500                               # Número de iterações
 prob = np.zeros((fo, NCidades))             # Matriz probabilidade
 
 K = d + np.eye(NCidades, NCidades)          # Matriz auxiliar para somar zeros
@@ -58,15 +67,25 @@ MelhorCaminho = None
 # ================================
 while inter <= iteracoes:
     FuncObj = np.zeros(fo)
+    # print(f"FuncObj\n {FuncObj}")
     Matriz_Infor = np.zeros((fo, NCidades))
     
-    print(f'\n--- Iteração {inter} ---')
+    # print(f"Matriz_Infor\n {Matriz_Infor}")
+
+    # print(f'\n--- Iteração {inter} ---')
     
     for f in range(fo):
         # A formiga partirá de um ponto inicial aleatório
+        '''Popula a primeira coluna de Matriz_Infor com valores de cidades aleatorias'''
         Matriz_Infor[f, 0] = 1 + int(abs(8 * random.random()))
+        
+        '''Obtem os valores da primeira coluna para a formiga em execução'''
         Part = int(Matriz_Infor[f, 0])
+        
+        '''Define a proxima cidade a ser percorrida para a formiga em execução'''
         ProxCidade = Part
+
+        '''Soma todas as distancias saindo da cidade Part'''
         Tot = np.sum(Feromonio[Part-1, :])
         
         # print(f'\nFormiga {f+1} começando na cidade {Part}')
@@ -78,6 +97,7 @@ while inter <= iteracoes:
             while TesteFer == 0:
                 teste = 0
                 Roleta = random.random() * Tot
+                # print(f"Roleta: {Roleta}")
                 TotFer = 0.0
                 
                 # print(f'    Roleta: {Roleta}')
