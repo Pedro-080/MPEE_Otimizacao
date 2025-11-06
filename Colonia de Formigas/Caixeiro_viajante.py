@@ -27,7 +27,7 @@ def criar_roleta(porcentagens):
         fim = inicio + valor
         # Usar índice para garantir unicidade mesmo com chaves duplicadas
         intervalos.append((inicio, fim, chave, indice))
-        print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
+        # print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
         inicio = fim
         indice += 1
 
@@ -37,7 +37,7 @@ def criar_roleta(porcentagens):
 def girar_roleta(intervalos):
     valor_aleatorio = random.uniform(0, 100)
 
-    print(f"valor sorteado: {valor_aleatorio}")
+    # print(f"valor sorteado: {valor_aleatorio}")
     for inicio, fim, chave, indice in intervalos:
         if inicio <= valor_aleatorio < fim:
             return chave
@@ -77,7 +77,7 @@ num_formigas = 6                                            # Número de formiga
 tau = np.ones((NCidades, NCidades)) * 0.001  # Deposição inicial de feromonio
 Matriz_Infor = np.zeros((num_formigas, NCidades))            # Caminho das formigas
 Matriz_Infor_Temp = Matriz_Infor.copy()            # Informativo das cidades
-iteracoes = 1                                  # Número de iterações
+iteracoes = 5                                  # Número de iterações
 prob = np.zeros((num_formigas, NCidades))                    # Matriz probabilidade
 
 K = d + np.eye(NCidades, NCidades)                 # Matriz auxiliar para somar zeros
@@ -94,20 +94,29 @@ n1 = m1 - np.eye(NCidades, NCidades)        # Matriz de termos inversos a distâ
 
 
 # Cidades_disponiveis = list(range(0,NCidades))
-Cidades_disponiveis = np.tile(np.arange(1,NCidades+1),(num_formigas,1))   
+
 
  
 for iteracao in range(iteracoes):
+    print(f" ===== iteração: {iteracao} =====")   
+    # '''Reinicia a matriz de cidades disponíveis a cada iteração'''
+    Cidades_disponiveis = np.tile(np.arange(1,NCidades+1),(num_formigas,1))   
+    
+    FuncObj = np.zeros((num_formigas,1))
+    # print(f"FuncObj: {FuncObj}")
+
+
     # '''Itera as formigas sobre as cidades que devem ser percorridas'''
     for cidade in range(NCidades-1):
         # '''Cabeçalho para debug de codigo'''
 
-        print(f" ===== Cidade: {cidade} | iteração: {iteracao} =====")   
+        # print(f" ===== Cidade: {cidade} | iteração: {iteracao} =====")   
 
         # '''Itera sobre as formigas, calculando a proxima cidade com base na cidade atual'''
         for formiga in range(num_formigas):
-            
+            # print(f"====== Formiga {formiga} ======")
 
+            
 
             # '''Starta a matriz de probabilidades como zeros'''
             probabilidade = [0] * NCidades
@@ -125,6 +134,9 @@ for iteracao in range(iteracoes):
             else:
                 # '''Define a cidade atual de acordo com o ja estabelecido'''
                 Cidade_atual = int(Matriz_Infor[formiga, cidade])
+
+            # print(f"Cidade_atual: {Cidade_atual}")
+            # print(f"Cidades_disponiveis: {Cidades_disponiveis[formiga]}")
 
             # '''Cria mascara de cidades disponiveis, 0 para cidade indisponivel, 1 para cidade disponivel'''
             Cidades_disponiveis_list = (Cidades_disponiveis[formiga] != 0).astype(int)
@@ -151,9 +163,10 @@ for iteracao in range(iteracoes):
             # '''Calcula a probabilidade das proximas cidades'''
             probabilidade = matriz[Cidade_atual-1] * 1/denominador  * Cidades_disponiveis_list
             
-            print(f"Denominador: {denominador}")
-            print(f"probabilidade: {probabilidade}")
-            print(f"probabilidade total: {sum(probabilidade)}")
+            # print(f"Denominador: {denominador}")
+            
+            # print(f"probabilidade: {probabilidade}")
+            # print(f"probabilidade total: {sum(probabilidade)}")
 
             # '''Cria roleta com intervalos para cada probabilidade'''
             intervalos = criar_roleta(probabilidade)
@@ -164,22 +177,24 @@ for iteracao in range(iteracoes):
             # '''Define a proxima cidade como valor sorteado, +1 para correção da indexação de listas no python'''
             Cidade_proxima = sorteado + 1 
 
-            # print(f"Cidade_atual: {Cidade_atual}")
-            # print(f"Cidade_proxima: {Cidade_proxima}")
+            
+            # print(f"Proxima cidade: {Cidade_proxima}")
 
             # '''Indexa a proxima cidade sorteada a matriz de caminhos'''
             Matriz_Infor[formiga, cidade + 1 ] = Cidade_proxima
 
     
-            # '''Elimina as cidades já visitadas da matriz de cidades disponíveis Não sei se pode ser eliminado'''
-            # linha_limpa = [0 if x == Cidade_atual else x for x in Cidades_disponiveis[formiga]]
-            # Cidades_disponiveis[formiga] = linha_limpa
+            # '''Elimina as cidades já visitadas da matriz de cidades disponíveis '''
+            linha_limpa = [0 if x == Cidade_atual else x for x in Cidades_disponiveis[formiga]]
+            Cidades_disponiveis[formiga] = linha_limpa
+
+            FuncObj[formiga] = FuncObj[formiga] + d[Cidade_atual-1 , Cidade_proxima-1 ] 
+            # print(f"FuncObj[{formiga}]: {FuncObj[formiga]}")
 
 
+            # print(f"\n")
 
-            print(f"\n")
-
-
+    print(f"FuncObj: \n {FuncObj}")
 
 
 
@@ -188,5 +203,9 @@ for iteracao in range(iteracoes):
         # #     # print(f"formiga: {formiga}")
 
         # # # print(f"Cidades_disponíveis: {Cidades_disponíveis}")
+
+
+        
     print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
     # print(f"cidade:{cidade}") 
+
