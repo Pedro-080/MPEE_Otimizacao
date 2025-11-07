@@ -46,11 +46,26 @@ def girar_roleta(intervalos):
     return intervalos[-1][2]
 
 
+def matriz_caminho(caminho):
+    NCidades = caminho.shape[0]
+    matriz = np.zeros((NCidades, NCidades), dtype=int)
+
+    # Extrair os pares consecutivos
+    pares = [(int(caminho[i]), int(caminho[i+1])) for i in range(len(caminho)-1)]
+
+    # Preencher com 1 nos pares especificados
+    for i, j in pares:
+        matriz[i-1, j-1] = 1  # -1 porque Python indexa de 0 e seus números são de 1-5
+    return matriz
+
+
+
+
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
 q = 10      # Constante de atualização do feromônio
-s = 0.01    # Evaporação do feromônio
+rho = 0.01    # Evaporação do feromônio
 fer = 0.1   # Feromônio inicial
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 2       # Parâmetro de influência de distância
@@ -58,13 +73,30 @@ err = 10**(-4)
 
 
 # Matriz de distâncias
+# d = np.array([
+#         [0, 2, 9, 10, 7],
+#         [1, 0, 6, 4, 3],
+#         [15, 7, 0, 8, 3],
+#         [6, 3, 12, 0, 11],
+#         [9, 7, 5, 6, 0]
+# ])
+
+
 d = np.array([
-        [0, 2, 9, 10, 7],
-        [1, 0, 6, 4, 3],
-        [15, 7, 0, 8, 3],
-        [6, 3, 12, 0, 11],
-        [9, 7, 5, 6, 0]
+    [0, 76.5, 27.2, 100.3, 127.5, 154.7, 181.9, 209.1],
+    [76.5, 0, 44.2, 98.6, 125.8, 153, 180.2, 207.4],
+    [27.2, 44.2, 0, 107.1, 134.3, 161.5, 188.7, 215.9],
+    [100.3, 98.6, 107.1, 0, 27.2, 54.4, 81.6, 108.8],
+    [127.5, 125.8, 134.3, 27.2, 0, 27.2, 54.4, 81.6],
+    [154.7, 153, 161.5, 54.4, 27.2, 0, 27.2, 54.4],
+    [181.9, 180.2, 188.7, 81.6, 54.4, 27.2, 0, 27.2],
+    [209.1, 207.4, 215.9, 108.8, 81.6, 54.4, 27.2, 0]
 ])
+
+
+
+
+
 
 CIDADES = ['A', 'B', 'C', 'D', 'E']
 
@@ -73,30 +105,31 @@ NCidades = d.shape[0]
 # ================================
 # INICIALIZAÇÃO
 # ================================
-num_formigas = 6                                            # Número de formigas, duas por cidade
-tau = np.ones((NCidades, NCidades)) * 0.001  # Deposição inicial de feromonio
+num_formigas = 10                                            # Número de formigas, duas por cidade
+tau = np.ones((NCidades, NCidades)) * 0.001                  # Deposição inicial de feromonio
 Matriz_Infor = np.zeros((num_formigas, NCidades))            # Caminho das formigas
-Matriz_Infor_Temp = Matriz_Infor.copy()            # Informativo das cidades
-iteracoes = 5                                  # Número de iterações
+Matriz_Infor_Temp = Matriz_Infor.copy()                      # Informativo das cidades
+iteracoes = 10                                               # Número de iterações
 prob = np.zeros((num_formigas, NCidades))                    # Matriz probabilidade
 
-K = d + np.eye(NCidades, NCidades)                 # Matriz auxiliar para somar zeros
+K = d + np.eye(NCidades, NCidades)                           # Matriz auxiliar para somar zeros
 
-m1 = K**(-1)                                # Invertendo termos da matriz auxiliar
-n1 = m1 - np.eye(NCidades, NCidades)        # Matriz de termos inversos a distância
+m1 = K**(-1)                                                 # Invertendo termos da matriz auxiliar
+n1 = m1 - np.eye(NCidades, NCidades)                         # Matriz de termos inversos a distância
 
 
 # print(f"d: \n {d}")
 # print(f"Feromonio: \n {Feromonio}")
 # print(f"n: \n {n1}")
 
+melhor_resultado = [ np.inf , [] ]
 
-
+print(f"melhor: {melhor_resultado}")
 
 # Cidades_disponiveis = list(range(0,NCidades))
 
 
- 
+
 for iteracao in range(iteracoes):
     print(f" ===== iteração: {iteracao} =====")   
     # '''Reinicia a matriz de cidades disponíveis a cada iteração'''
@@ -196,16 +229,53 @@ for iteracao in range(iteracoes):
 
     print(f"FuncObj: \n {FuncObj}")
 
+    indice_menor_valor = np.argmin(FuncObj)
+
+    novo_melhor_resultado = [ FuncObj[indice_menor_valor].tolist()[0] , Matriz_Infor[indice_menor_valor].tolist() ]
+
+    if novo_melhor_resultado[0] < melhor_resultado[0]:
+        melhor_resultado = novo_melhor_resultado
 
 
 
+    print(f"Menor valor: {FuncObj[indice_menor_valor]}")
+    print(f"Cidades menor valor:  {Matriz_Infor[indice_menor_valor]}")
+
+    print(f"Melhor resultado:  {melhor_resultado}")
+
+    delta_tau = np.zeros((NCidades, NCidades))
+
+    for formiga in range(num_formigas):
+
+        # print(f"========= Matriz_Infor[{formiga}] ========= \n {Matriz_Infor[formiga]}")
+
+        delta_tau = delta_tau + matriz_caminho(Matriz_Infor[formiga]) * 1/FuncObj[formiga]
+        
+        # print(matriz_caminho(Matriz_Infor[formiga]))
         # #     # print(n_cidade_beta)    
         # #     # print(f"formiga: {formiga}")
 
         # # # print(f"Cidades_disponíveis: {Cidades_disponíveis}")
 
+    # print(f"========= tau ========= \n {tau}")
 
-        
+    # print(f"========= delta_tau ========= \n {delta_tau}")
+
+    tau = (1-rho)*tau + delta_tau
+
+    np.set_printoptions(precision=4, floatmode='fixed')
+    print(f"========= tau ========= \n {tau}")
+
     print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
-    # print(f"cidade:{cidade}") 
+    
+    
+    
+# ================================
+# RESULTADOS FINAIS
+# ================================
+print('\n' + '='*50)
+print('RESULTADO FINAL')
+print('='*50)
 
+print(f"O melhor resultado é: {melhor_resultado[0]:.2f}")
+print(f"O melhor caminho é: {melhor_resultado[1]}")
