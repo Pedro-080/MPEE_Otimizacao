@@ -27,7 +27,7 @@ def criar_roleta(porcentagens):
         fim = inicio + valor
         # Usar índice para garantir unicidade mesmo com chaves duplicadas
         intervalos.append((inicio, fim, chave, indice))
-        # print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
+        print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
         inicio = fim
         indice += 1
 
@@ -37,7 +37,7 @@ def criar_roleta(porcentagens):
 def girar_roleta(intervalos):
     valor_aleatorio = random.uniform(0, 100)
 
-    # print(f"valor sorteado: {valor_aleatorio}")
+    print(f"valor sorteado: {valor_aleatorio}")
     for inicio, fim, chave, indice in intervalos:
         if inicio <= valor_aleatorio < fim:
             return chave
@@ -73,25 +73,25 @@ err = 10**(-4)
 
 
 # Matriz de distâncias
-# d = np.array([
-#         [0, 2, 9, 10, 7],
-#         [1, 0, 6, 4, 3],
-#         [15, 7, 0, 8, 3],
-#         [6, 3, 12, 0, 11],
-#         [9, 7, 5, 6, 0]
-# ])
-
-
 d = np.array([
-    [0, 76.5, 27.2, 100.3, 127.5, 154.7, 181.9, 209.1],
-    [76.5, 0, 44.2, 98.6, 125.8, 153, 180.2, 207.4],
-    [27.2, 44.2, 0, 107.1, 134.3, 161.5, 188.7, 215.9],
-    [100.3, 98.6, 107.1, 0, 27.2, 54.4, 81.6, 108.8],
-    [127.5, 125.8, 134.3, 27.2, 0, 27.2, 54.4, 81.6],
-    [154.7, 153, 161.5, 54.4, 27.2, 0, 27.2, 54.4],
-    [181.9, 180.2, 188.7, 81.6, 54.4, 27.2, 0, 27.2],
-    [209.1, 207.4, 215.9, 108.8, 81.6, 54.4, 27.2, 0]
+        [0, 2, 9, 10, 7],
+        [1, 0, 6, 4, 3],
+        [15, 7, 0, 8, 3],
+        [6, 3, 12, 0, 11],
+        [9, 7, 5, 6, 0]
 ])
+
+
+# d = np.array([
+#     [0, 76.5, 27.2, 100.3, 127.5, 154.7, 181.9, 209.1],
+#     [76.5, 0, 44.2, 98.6, 125.8, 153, 180.2, 207.4],
+#     [27.2, 44.2, 0, 107.1, 134.3, 161.5, 188.7, 215.9],
+#     [100.3, 98.6, 107.1, 0, 27.2, 54.4, 81.6, 108.8],
+#     [127.5, 125.8, 134.3, 27.2, 0, 27.2, 54.4, 81.6],
+#     [154.7, 153, 161.5, 54.4, 27.2, 0, 27.2, 54.4],
+#     [181.9, 180.2, 188.7, 81.6, 54.4, 27.2, 0, 27.2],
+#     [209.1, 207.4, 215.9, 108.8, 81.6, 54.4, 27.2, 0]
+# ])
 
 
 
@@ -109,7 +109,7 @@ num_formigas = 10                                            # Número de formig
 tau = np.ones((NCidades, NCidades)) * 0.001                  # Deposição inicial de feromonio
 Matriz_Infor = np.zeros((num_formigas, NCidades))            # Caminho das formigas
 Matriz_Infor_Temp = Matriz_Infor.copy()                      # Informativo das cidades
-iteracoes = 10                                               # Número de iterações
+iteracoes = 3                                               # Número de iterações
 prob = np.zeros((num_formigas, NCidades))                    # Matriz probabilidade
 
 K = d + np.eye(NCidades, NCidades)                           # Matriz auxiliar para somar zeros
@@ -224,7 +224,7 @@ for iteracao in range(iteracoes):
             FuncObj[formiga] = FuncObj[formiga] + d[Cidade_atual-1 , Cidade_proxima-1 ] 
             # print(f"FuncObj[{formiga}]: {FuncObj[formiga]}")
 
-
+            print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
             # print(f"\n")
 
     print(f"FuncObj: \n {FuncObj}")
@@ -257,7 +257,8 @@ for iteracao in range(iteracoes):
 
         # # # print(f"Cidades_disponíveis: {Cidades_disponíveis}")
 
-    # print(f"========= tau ========= \n {tau}")
+    print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
+    print(f"========= tau ========= \n {tau}")
 
     # print(f"========= delta_tau ========= \n {delta_tau}")
 
