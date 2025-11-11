@@ -27,7 +27,7 @@ def criar_roleta(porcentagens):
         fim = inicio + valor
         # Usar índice para garantir unicidade mesmo com chaves duplicadas
         intervalos.append((inicio, fim, chave, indice))
-        print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
+        # print(f"Elemento {indice} (valor {chave}): [{inicio:.2f} - {fim:.2f}] ({valor:.2f}%)")
         inicio = fim
         indice += 1
 
@@ -37,7 +37,7 @@ def criar_roleta(porcentagens):
 def girar_roleta(intervalos):
     valor_aleatorio = random.uniform(0, 100)
 
-    print(f"valor sorteado: {valor_aleatorio}")
+    # print(f"valor sorteado: {valor_aleatorio}")
     for inicio, fim, chave, indice in intervalos:
         if inicio <= valor_aleatorio < fim:
             return chave
@@ -73,13 +73,22 @@ err = 10**(-4)
 
 
 # Matriz de distâncias
+# d = np.array([
+#         [0, 2, 9, 10, 7],
+#         [1, 0, 6, 4, 3],
+#         [15, 7, 0, 8, 3],
+#         [6, 3, 12, 0, 11],
+#         [9, 7, 5, 6, 0]
+# ])
+
 d = np.array([
-        [0, 2, 9, 10, 7],
-        [1, 0, 6, 4, 3],
-        [15, 7, 0, 8, 3],
-        [6, 3, 12, 0, 11],
-        [9, 7, 5, 6, 0]
+            [ 0.0, 1.0, 2.2, 2.0, 4.1],
+            [ 1.0, 0.0, 1.4, 2.2, 4.0],
+            [ 2.2, 1.4, 0.0, 2.2, 3.2],
+            [ 2.0, 2.2, 2.2, 0.0, 2.2],
+            [ 4.1, 4.0, 3.2, 2.2, 0.0]
 ])
+
 
 
 # d = np.array([
@@ -109,8 +118,8 @@ num_formigas = 10                                            # Número de formig
 tau = np.ones((NCidades, NCidades)) * 0.001                  # Deposição inicial de feromonio
 Matriz_Infor = np.zeros((num_formigas, NCidades))            # Caminho das formigas
 Matriz_Infor_Temp = Matriz_Infor.copy()                      # Informativo das cidades
-iteracoes = 3                                               # Número de iterações
-prob = np.zeros((num_formigas, NCidades))                    # Matriz probabilidade
+iteracoes = 3                                                # Número de iterações
+# prob = np.zeros((num_formigas, NCidades))                  # Matriz probabilidade
 
 K = d + np.eye(NCidades, NCidades)                           # Matriz auxiliar para somar zeros
 
@@ -224,10 +233,10 @@ for iteracao in range(iteracoes):
             FuncObj[formiga] = FuncObj[formiga] + d[Cidade_atual-1 , Cidade_proxima-1 ] 
             # print(f"FuncObj[{formiga}]: {FuncObj[formiga]}")
 
-            print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
+            # print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
             # print(f"\n")
 
-    print(f"FuncObj: \n {FuncObj}")
+    # print(f"FuncObj: \n {FuncObj}")
 
     indice_menor_valor = np.argmin(FuncObj)
 

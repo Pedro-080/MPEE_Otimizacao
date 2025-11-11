@@ -97,6 +97,25 @@ class Cabo():
         
     #     return resultados
 
+    def array_calcular_massa_ton(self,comprimentos_array):
+        """
+        Calcula a massa equivalente em toneladas para o trecho específico.
+        
+        Args:
+            comprimentos_array: np.array de comprimentos em metros
+            
+        Returns:
+            massa: array com massa de cada trecho
+        """
+        peso_kg_km = self.peso_kgkm
+        peso_ton_m = peso_kg_km * 1e-6   #Conversão de kg/km para ton/m
+
+        array_peso = comprimentos_array * peso_ton_m
+
+        return array_peso
+
+
+
 
 
 

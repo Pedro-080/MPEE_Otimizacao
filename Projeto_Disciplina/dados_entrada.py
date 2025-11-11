@@ -10,19 +10,19 @@ FC_100      = 1
 
 # DADOS DE ENTRADA
 comprimento = np.array([
-[    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
-[    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
-[    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0],
-[    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0],
-[    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0],
-[    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0],
-[    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0],
-[    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0],
-[    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0],
-[    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0],
-[    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0],
-[    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000],
-[    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0]
+    [    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+    [    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+    [    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0,    0],
+    [    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0,    0],
+    [    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0,    0],
+    [    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0,    0],
+    [    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0,    0],
+    [    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0,    0],
+    [    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0,    0],
+    [    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0,    0],
+    [    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000,    0],
+    [    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 1000],
+    [    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0]
 ])
 
 
@@ -54,6 +54,20 @@ perdas_ANEMONE    = ANEMONE.array_calcular_perdas_percent(comprimento, Pot_acumu
 perdas_MAGNOLIA   = MAGNOLIA.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC_100)
 perdas_MARIGOLD   = MARIGOLD.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC_100)
 
+peso_OXLIP        = OXLIP.array_calcular_massa_ton(comprimento)
+peso_GOLDENTUFT   = GOLDENTUFT.array_calcular_massa_ton(comprimento)
+peso_COSMOS       = COSMOS.array_calcular_massa_ton(comprimento)
+peso_ORCHID       = ORCHID.array_calcular_massa_ton(comprimento)
+peso_ARBUTUS      = ARBUTUS.array_calcular_massa_ton(comprimento)
+peso_ANEMONE      = ANEMONE.array_calcular_massa_ton(comprimento)
+peso_MAGNOLIA     = MAGNOLIA.array_calcular_massa_ton(comprimento)
+peso_MARIGOLD     = MARIGOLD.array_calcular_massa_ton(comprimento)
 
-# print(perdas_OXLIP)
+
+
+# print(f"perdas_OXLIP: \n {perdas_OXLIP}")
+# print('\n' + '='*50)
+
+# print(f"peso_OXLIP: \n {peso_OXLIP}")
+
 # print(perdas_MARIGOLD)
