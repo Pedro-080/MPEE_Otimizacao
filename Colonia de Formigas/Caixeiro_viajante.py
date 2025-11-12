@@ -235,7 +235,7 @@ for iteracao in range(iteracoes):
 
             # print(f"========= Matriz_Infor ========= \n {Matriz_Infor}")
             # print(f"\n")
-
+        print(f"Cidades_disponiveis: {Cidades_disponiveis}")
     # print(f"FuncObj: \n {FuncObj}")
 
     indice_menor_valor = np.argmin(FuncObj)

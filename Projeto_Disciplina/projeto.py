@@ -200,7 +200,7 @@ for cidade in range(NCidades):
 
         Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
 
-        print(f"Layers_disponiveis_list\n{Layers_disponiveis_list}")
+        # print(f"Layers_disponiveis_list\n{Layers_disponiveis_list}")
 
         # n_cidade_beta    = lista_n[layer_atual] ** beta
         # tau_cidade_alfa  = lista_tau[layer_atual] ** alfa
@@ -210,6 +210,6 @@ for cidade in range(NCidades):
 
 
 # print(f"matriz {matriz.shape}")
-# print_matrix3d(matriz)
+print_matrix3d(matriz)
 
 print(f"Matriz_Infor: \n{Matriz_Infor}")
