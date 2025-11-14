@@ -5,18 +5,19 @@ import random
 
 
 def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,cidade_atual, num_cabos):
-
+    '''Esta função não está funcionando crretamente, corrigir!!!'''
     # Cidades_disponiveis_index = np.subtract(Cidades_disponiveis, 1)
     Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
     Cidades_disponiveis_index = np.insert(Cidades_disponiveis_index, 0, 0)
 
+    print(f"Cidades_disponiveis_index: {Cidades_disponiveis_index}")
     # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
 
     NCidades = len(Cidades_disponiveis_index)
     
     Cidades_disponiveis_list = (Cidades_disponiveis_index != 0).astype(int)
-    print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
-    print(f"Cidades_disponiveis_lis:  {Cidades_disponiveis_list}")
+    # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
+    # print(f"Cidades_disponiveis_lis:  {Cidades_disponiveis_list}")
 
     # #Cria a base que será usada 
     base = np.zeros((NCidades,NCidades),dtype=int)
@@ -24,9 +25,9 @@ def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,cidade_atual, num_c
     
     matriz = np.stack([base]*num_cabos,axis=2)
     # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
-    print_matrix3d(matriz)
+    # print_matrix3d(matriz)
     # print(matriz)
-    print('='*50)
+    # print('='*50)
     return matriz
 
 def matrix3d_fatiar_linha(linha, matrix3d):
@@ -36,7 +37,6 @@ def matrix3d_fatiar_linha(linha, matrix3d):
     # Manter apenas a linha 0 (índice 0) de todos os layers
     matriz_resultado[linha-1, :, :] = matrix3d[linha-1, :, :]
     return matriz_resultado
-
 
 def Remover_cidade(lista_cidades,cidade):
     """
@@ -53,9 +53,6 @@ def Remover_cidade(lista_cidades,cidade):
         print("Cidade não disponível")
     
     return array_modificado
-
-
-
 
 def print_matrix3d(matrix_3d,condutores=[]):
     num_linhas =  matrix_3d.shape[0]
@@ -93,6 +90,80 @@ def calcular_n(matriz):
 
     return n
 
+def criar_roleta_3d(probabilidade):
+    """
+    Cria uma roleta para uma matriz 3D de probabilidades
+    Retorna uma lista de intervalos onde cada elemento tem sua faixa proporcional à probabilidade
+    
+    Args:
+        matriz_3d: array numpy 3D onde a soma de todos os elementos é 1
+    
+    Returns:
+        Lista de tuplas (inicio, fim, coordenadas, indice_original)
+    """
+    # Achatar a matriz para 1D mantendo as coordenadas originais
+    probabilidades_flat = probabilidade.flatten()
+    
+    # Gerar coordenadas para cada elemento
+    coordenadas = []
+    shape = probabilidade.shape
+    for idx in np.ndindex(shape):
+        coordenadas.append(idx)
+    
+    # Converter para porcentagem
+    probabilidades_porcentagem = probabilidades_flat * 100
+    
+    # Combinar coordenadas com probabilidades
+    elementos_completos = list(zip(coordenadas, probabilidades_porcentagem))
+    
+    # Ordenar por probabilidade (do menor para o maior)
+    elementos_ordenados = sorted(elementos_completos, key=lambda x: x[1])
+    
+    # Criar intervalos
+    intervalos = []
+    inicio = 0
+    indice = 0
+    
+    # print(f"Matriz 3D shape: {shape}")
+    # print(f"Total de elementos: {len(elementos_ordenados)}")
+    # print("\nIntervalos da roleta:")
+    
+    for coordenada, probabilidade in elementos_ordenados:
+        if probabilidade > 0:  # Ignorar elementos com probabilidade zero
+            fim = inicio + probabilidade
+            intervalos.append((inicio, fim, coordenada, indice))
+            # print(f"Elemento {indice} (coord {coordenada}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
+            inicio = fim
+            indice += 1
+    
+    # print(f"Soma total dos intervalos: {inicio:.4f}%")
+    return intervalos
+
+def girar_roleta(intervalos):
+    """
+    Gira a roleta e retorna as coordenadas do elemento sorteado
+    
+    Args:
+        intervalos: lista de intervalos retornada por criar_roleta_3d
+    
+    Returns:
+        Tupla com coordenadas (i, j, k) do elemento sorteado
+    """
+    if not intervalos:
+        raise ValueError("Lista de intervalos vazia")
+    
+    valor_aleatorio = random.uniform(0, 100)
+    # print(f"Valor sorteado: {valor_aleatorio:.4f}")
+    
+    for inicio, fim, coordenada, indice in intervalos:
+        if inicio <= valor_aleatorio < fim:
+            cidade_escolhida = coordenada[1]
+            layer_escolhida = coordenada[2]
+            return cidade_escolhida,layer_escolhida
+    
+    # Caso raro: valor exatamente no limite superior
+    return intervalos[-1][2]
+ 
 
 
 # ================================
@@ -186,7 +257,7 @@ NCabos   = pesos.shape[2]
 # ================================
 # INICIALIZAÇÃO
 # ================================
-num_formigas = 10                                            # Número de formigas, duas por cidade
+num_formigas = 2                                            # Número de formigas, duas por cidade
 tau = np.ones((NCidades, NCidades,NCabos)) * 0.001         # Deposição inicial de feromonio
 n = calcular_n(pesos)                                        # Matriz de termos inversos a distância
 
@@ -237,7 +308,7 @@ Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1))
 
 '''Versão correta - Descomentar apos testes'''
 num_passos = np.count_nonzero(comprimento)
-num_passos = 1
+num_passos = 2
 
 # print(f"Cidades_disponiveis: \n{Cidades_disponiveis}")
 
@@ -249,6 +320,7 @@ for passo in range(1, num_passos+1):
 
 
     for formiga in range(num_formigas):
+        print('='*20 +"formiga: "+ str(formiga) + '='*20)
         # linha_limpa = [0 if x == cidade_atual else x for x in Cidades_disponiveis[formiga]]
         # Cidades_disponiveis[formiga] = linha_limpa
 
@@ -270,7 +342,7 @@ for passo in range(1, num_passos+1):
             # layer_atual = int(Matriz_Infor[formiga, passo])    
             ...    
 
-        print(f"cidade_atual: {cidade_atual}")
+        # print(f"cidade_atual: {cidade_atual}")
         # Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],2)
 
         Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
@@ -283,16 +355,32 @@ for passo in range(1, num_passos+1):
         matriz = lista_tau[layer_atual-1] ** alfa * lista_n[layer_atual-1] ** beta
 
         
+        
 
         mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],cidade_atual, NCabos)
 
+        # print_matrix3d(mascara_cidades_disponiveis)
+
+
         numerador = matriz * mascara_cidades_disponiveis
+
+        
 
         denominador = np.sum(numerador)
 
         # '''Calcula a probabilidade das proximas cidades'''
         probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
         
+        intervalos = criar_roleta_3d(probabilidade)
+        proxima_cidade, proximo_cabo = girar_roleta(intervalos)
+        proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
+        
+        print(f"Cidade atual: {cidade_atual}")
+        print(f"proxima_cidade: {proxima_cidade}")
+        Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
+        print(f"Cidades_disponiveis aqui: \n{Cidades_disponiveis[formiga]}")
+        
+
 
     # print(f"Cidade atual: \n{cidade}")
 
@@ -304,10 +392,22 @@ for passo in range(1, num_passos+1):
 
 # print(f"Cidades_disponiveis: \n{Cidades_disponiveis}")
 # # print(f"matriz {matriz.shape}")
-print_matrix3d(matriz)
-print('\n' + '='*50)
-print_matrix3d(numerador)
-print(f"denominador: { denominador}")
-print_matrix3d(probabilidade)
-print(f"probabilidade total: {np.sum(probabilidade)}")
-# print(f"Matriz_Infor: \n{Matriz_Infor}")
+# print_matrix3d(matriz)
+    print('\n' + '='*50 + '\n')
+# # print_matrix3d(numerador)
+# # print(f"denominador: { denominador}")
+# print_matrix3d(probabilidade)
+# # print(f"probabilidade total: {np.sum(probabilidade)}")
+# # # print(f"Matriz_Infor: \n{Matriz_Infor}")
+
+
+
+# intervalos = criar_roleta_3d(probabilidade)
+
+
+
+
+# proxima_cidade, proximo_cabo = girar_roleta(intervalos)
+
+# print(f"proxima_cidade: {proxima_cidade}")
+# print(f"proximo_cabo: {proximo_cabo}")
