@@ -4,29 +4,51 @@ import numpy as np
 import random
 
 
-def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,cidade_atual, num_cabos):
-    '''Esta função não está funcionando crretamente, corrigir!!!'''
-    # Cidades_disponiveis_index = np.subtract(Cidades_disponiveis, 1)
-    Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
-    Cidades_disponiveis_index = np.insert(Cidades_disponiveis_index, 0, 0)
+def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, num_cabos):
 
-    print(f"Cidades_disponiveis_index: {Cidades_disponiveis_index}")
+    # print(f"Num cidades: {num_cidades}")
+    # '''Esta função não está funcionando crretamente, corrigir!!!'''
+    
+    Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
+    Cidades_disponiveis_index = Cidades_disponiveis_index[Cidades_disponiveis_index != 0]
+    Cidades_disponiveis_index = np.subtract(Cidades_disponiveis_index, 1)
+
+    # print(f"Cidades_disponiveis_index pre: {Cidades_disponiveis_index}")
+    # Cidades_disponiveis_index = np.insert(Cidades_disponiveis_index, 0, 0)
+
+    range_cidades = [x for x in range(0,num_cidades)]
+    Cidades_disponiveis_index = Cidades_disponiveis_index.tolist()
+
+
+    # print(f"Cidades_disponiveis_index: {Cidades_disponiveis_index}")
+    # print(f"range_cidades: {range_cidades}")
+    lista_cidades = []
+
+    for cidade in range_cidades:
+        if cidade in Cidades_disponiveis_index:
+            lista_cidades.append(1)
+        else:
+            lista_cidades.append(0)
+
+
+
+
     # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
 
-    NCidades = len(Cidades_disponiveis_index)
+    # NCidades = len(Cidades_disponiveis_index)
     
-    Cidades_disponiveis_list = (Cidades_disponiveis_index != 0).astype(int)
+    # Cidades_disponiveis_list = (Cidades_disponiveis_index != 0).astype(int)
     # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
     # print(f"Cidades_disponiveis_lis:  {Cidades_disponiveis_list}")
 
     # #Cria a base que será usada 
     base = np.zeros((NCidades,NCidades),dtype=int)
-    base[cidade_atual-1] = Cidades_disponiveis_list 
+    base[cidade_atual-1] = lista_cidades
     
     matriz = np.stack([base]*num_cabos,axis=2)
     # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
     # print_matrix3d(matriz)
-    # print(matriz)
+    # # print(matriz)
     # print('='*50)
     return matriz
 
@@ -163,7 +185,7 @@ def girar_roleta(intervalos):
     
     # Caso raro: valor exatamente no limite superior
     return intervalos[-1][2]
- 
+
 
 
 # ================================
@@ -177,7 +199,7 @@ FC_100      = 1
 
 # DADOS DE ENTRADA
 comprimento = np.array([
-    [    0, 100,    0,    0,    0 ],
+    [    0, 100,    0,    500,    0 ],
     [    0,    0, 300,    0,    0],
     [    0,   0,    0, 500,    0],
     [    0,   1e-6,    0,    0, 1000],
@@ -264,8 +286,8 @@ n = calcular_n(pesos)                                        # Matriz de termos 
 lista_tau = [tau] * NCabos
 lista_n   = [n] * NCabos
 
-Matriz_Infor = np.zeros((num_formigas, NCabos))              # Caminho das formigas pelos layers
-iteracoes = 3                                                # Número de iterações
+
+iteracoes = 4                                                # Número de iterações
 
 
 
@@ -292,25 +314,42 @@ iteracoes = 3                                                # Número de itera�
 
 Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))  
 
-# print(f"Matriz_Infor: \n{Matriz_Infor}")
+# print(f"Matriz_layer: \n{Matriz_layer}")
 # print(f"Layers_disponiveis: \n{Layers_disponiveis}")
 
 
 #Criando lista de cidades disponiveis
 # Encontrar índices das colunas onde há valores não-zero
-linhas, colunas = np.where(comprimento != 0)
-colunas = np.add(colunas,1)
+
+linhas, colunas = np.where(comprimento != 0)               #Extrai as cidades, duplicando a que possuem multiplos caminhos
+colunas = np.add(colunas,1)                                #Adiciona 1 ao índice de todas as cidades, evitando começar em 0
+colunas = np.insert(colunas,0,1)                           #Adiciona a primeira cidade como 1
+
+
 # Ordenar pelas colunas (já vem ordenado por padrão)
 # lista_resultado = sorted(colunas.tolist())
+
+# print(f"colunas: {colunas}")
+
+
 
 Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1))  
 
 
+
+Matriz_layer = np.zeros((num_formigas, NCabos),dtype = int)              # Caminho das formigas pelos layers
+Matriz_cidades = np.zeros((num_formigas, len(colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
+
+
+
+# Cidades_disponiveis = np.tile(np.arange(1,NCidades+1),(num_formigas,1))  
+
 '''Versão correta - Descomentar apos testes'''
 num_passos = np.count_nonzero(comprimento)
-num_passos = 2
+num_passos = 4
 
-# print(f"Cidades_disponiveis: \n{Cidades_disponiveis}")
+# print(f"Cidades_disponiveis no começo do codigo: \n{Cidades_disponiveis}")
+# print(f"Matriz_cidades: \n{Matriz_cidades}")
 
 # print(f"num_passos:{num_passos}")
 
@@ -321,43 +360,49 @@ for passo in range(1, num_passos+1):
 
     for formiga in range(num_formigas):
         print('='*20 +"formiga: "+ str(formiga) + '='*20)
+        # print(f"Cidades_disponiveis no começo da formiga: \n{Cidades_disponiveis}")
         # linha_limpa = [0 if x == cidade_atual else x for x in Cidades_disponiveis[formiga]]
         # Cidades_disponiveis[formiga] = linha_limpa
 
         if passo == 1:
             cidade_atual = 1
             # '''Inicia todas as formigas em cidades aleatorias'''
-            Matriz_Infor[formiga, 0] = random.choice(Layers_disponiveis[formiga])
+            Matriz_layer[formiga, 0] = random.choice(Layers_disponiveis[formiga])
+            Matriz_cidades[formiga, passo-1] = cidade_atual
 
             # '''Define a cidade atual como a cidade aleatoria sorteada'''
-            layer_atual = int(Matriz_Infor[formiga, 0])
+            cabo_atual = int(Matriz_layer[formiga, 0])
 
-            # print(f"tau {layer_atual}: \n{lista_tau[layer_atual-1]}")
+            # print(f"tau {cabo_atual}: \n{lista_tau[cabo_atual-1]}")
 
         
 
         # '''Executa a partir da segunda cidade'''   
         else:
-            cidade_atual = 2
-            # layer_atual = int(Matriz_Infor[formiga, passo])    
+            cidade_atual =  Matriz_cidades[formiga, passo-1]
+            # cidade_atual = 3
+            # cabo_atual = int(Matriz_layer[formiga, passo])    
             ...    
 
-        # print(f"cidade_atual: {cidade_atual}")
-        # Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],2)
+        print(f"cidade_atual: {cidade_atual}")
+
+        Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
+        print(f"Cidades_disponiveis na formiga [{formiga}]: {Cidades_disponiveis[formiga]}")
+
 
         Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
 
         # print(f"Layers_disponiveis_list\n{Layers_disponiveis_list}")
 
-        # n_cidade_beta    = lista_n[layer_atual] ** beta
-        # tau_cidade_alfa  = lista_tau[layer_atual] ** alfa
+        # n_cidade_beta    = lista_n[cabo_atual] ** beta
+        # tau_cidade_alfa  = lista_tau[cabo_atual] ** alfa
         
-        matriz = lista_tau[layer_atual-1] ** alfa * lista_n[layer_atual-1] ** beta
+        matriz = lista_tau[cabo_atual-1] ** alfa * lista_n[cabo_atual-1] ** beta
 
         
         
 
-        mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],cidade_atual, NCabos)
+        mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],NCidades, NCabos)
 
         # print_matrix3d(mascara_cidades_disponiveis)
 
@@ -368,18 +413,27 @@ for passo in range(1, num_passos+1):
 
         denominador = np.sum(numerador)
 
-        # '''Calcula a probabilidade das proximas cidades'''
+        '''Calcula a probabilidade das proximas cidades'''
         probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
         
         intervalos = criar_roleta_3d(probabilidade)
         proxima_cidade, proximo_cabo = girar_roleta(intervalos)
         proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
-        
+        proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
+
+
+
         print(f"Cidade atual: {cidade_atual}")
         print(f"proxima_cidade: {proxima_cidade}")
-        Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
-        print(f"Cidades_disponiveis aqui: \n{Cidades_disponiveis[formiga]}")
-        
+
+
+        print(f"cabo_atual: {cabo_atual}")
+        print(f"proximo_cabo: {proximo_cabo}")
+        Matriz_layer[formiga, passo] = proximo_cabo
+        Matriz_cidades[formiga, passo] = proxima_cidade
+
+        # Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
+        # print(f"Cidades_disponiveis aqui: \n{Cidades_disponiveis[formiga]}")
 
 
     # print(f"Cidade atual: \n{cidade}")
@@ -397,9 +451,9 @@ for passo in range(1, num_passos+1):
 # # print_matrix3d(numerador)
 # # print(f"denominador: { denominador}")
 # print_matrix3d(probabilidade)
-# # print(f"probabilidade total: {np.sum(probabilidade)}")
-# # # print(f"Matriz_Infor: \n{Matriz_Infor}")
-
+# print(f"probabilidade total: {np.sum(probabilidade)}")
+print(f"Matriz_layer: \n{Matriz_layer}")
+print(f"Matriz_cidades: \n{Matriz_cidades}")
 
 
 # intervalos = criar_roleta_3d(probabilidade)
