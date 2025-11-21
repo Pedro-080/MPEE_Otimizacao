@@ -4,11 +4,12 @@ import numpy as np
 import random
 
 
-def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, num_cabos):
+def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list):
 
     # print(f"Num cidades: {num_cidades}")
     # '''Esta função não está funcionando crretamente, corrigir!!!'''
-    
+    # Layers_disponiveis_list
+
     Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
     Cidades_disponiveis_index = Cidades_disponiveis_index[Cidades_disponiveis_index != 0]
     Cidades_disponiveis_index = np.subtract(Cidades_disponiveis_index, 1)
@@ -45,11 +46,17 @@ def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, num_ca
     base = np.zeros((NCidades,NCidades),dtype=int)
     base[cidade_atual-1] = lista_cidades
     
-    matriz = np.stack([base]*num_cabos,axis=2)
+    matriz = np.stack([base]*7,axis=2)
+
+    # Modificação: criar matriz 3D com cada camada multiplicada pelo respectivo valor
+    matriz = base[:, :, np.newaxis] * Layers_disponiveis_list[np.newaxis, np.newaxis, :]
+
+    # matriz = base[np.newaxis, :, :] * Layers_disponiveis_list[:, np.newaxis, np.newaxis]
+
     # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
-    # print_matrix3d(matriz)
+    print_matrix3d(matriz)
     # # print(matriz)
-    # print('='*50)
+    print('*'*50)
     return matriz
 
 def matrix3d_fatiar_linha(linha, matrix3d):
@@ -60,7 +67,7 @@ def matrix3d_fatiar_linha(linha, matrix3d):
     matriz_resultado[linha-1, :, :] = matrix3d[linha-1, :, :]
     return matriz_resultado
 
-def Remover_cidade(lista_cidades,cidade):
+def Remover_elemento(lista_cidades,cidade):
     """
     Remove uma cidade (substitui por 0) em um array NumPy
     """
@@ -154,7 +161,7 @@ def criar_roleta_3d(probabilidade):
         if probabilidade > 0:  # Ignorar elementos com probabilidade zero
             fim = inicio + probabilidade
             intervalos.append((inicio, fim, coordenada, indice))
-            # print(f"Elemento {indice} (coord {coordenada}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
+            print(f"Elemento {indice} (coord {coordenada}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
             inicio = fim
             indice += 1
     
@@ -175,7 +182,7 @@ def girar_roleta(intervalos):
         raise ValueError("Lista de intervalos vazia")
     
     valor_aleatorio = random.uniform(0, 100)
-    # print(f"Valor sorteado: {valor_aleatorio:.4f}")
+    print(f"Valor sorteado: {valor_aleatorio:.4f}")
     
     for inicio, fim, coordenada, indice in intervalos:
         if inicio <= valor_aleatorio < fim:
@@ -290,7 +297,7 @@ NCabos   = pesos.shape[2]
 # ================================
 # INICIALIZAÇÃO
 # ================================
-num_formigas = 2                                            # Número de formigas, duas por cidade
+num_formigas = 1                                            # Número de formigas, duas por cidade
 tau = np.ones((NCidades, NCidades,NCabos)) * 0.001         # Deposição inicial de feromonio
 n = calcular_n(pesos)                                        # Matriz de termos inversos a distância
 
@@ -407,18 +414,27 @@ for iteracao in range(1,iteracoes+1):
 
             # print(f"cidade_atual: {cidade_atual}")
 
-            Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
+            Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
             print(f"Cidades_disponiveis na formiga [{formiga}]: {Cidades_disponiveis[formiga]}")
+            print(f"Cabos usados na formiga [{formiga}]: {Matriz_layer[formiga]}")
+                
+            Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+
 
 
             Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
             
+
+            print(f"Layers_disponiveis[formiga]: {Layers_disponiveis[formiga]}")
+            print(f"Layers_disponiveis_list: {Layers_disponiveis_list}")
+            print(f"cabo_atual: {cabo_atual}")
+            # print(f"resultado: {resultado}")
             matriz = lista_tau[cabo_atual-1] ** alfa * lista_n[cabo_atual-1] ** beta
 
             
             
 
-            mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],NCidades, NCabos)
+            mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],NCidades, Layers_disponiveis_list)
 
             # print_matrix3d(mascara_cidades_disponiveis)
 
@@ -450,7 +466,7 @@ for iteracao in range(1,iteracoes+1):
 
             FuncObj[formiga] = FuncObj[formiga] + pesos[cidade_atual-1 , proxima_cidade-1 ,cabo_atual -1] 
 
-            # Cidades_disponiveis[formiga] = Remover_cidade(Cidades_disponiveis[formiga],cidade_atual)
+            # Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
             # print(f"Cidades_disponiveis aqui: \n{Cidades_disponiveis[formiga]}")
 
 
@@ -460,6 +476,8 @@ for iteracao in range(1,iteracoes+1):
             # calcular_mascara_cidades_disponiveis(cidade_atual,Cidades_disponiveis[formiga])
             # print(f"Cidades_disponiveis_list atual: \n{Cidades_disponiveis_list}")
 
+
+    # delta_tau = np.ones((NCidades, NCidades,NCabos))
 
     for formiga in range(num_formigas):
         
