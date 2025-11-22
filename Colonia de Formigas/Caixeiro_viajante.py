@@ -56,6 +56,8 @@ def matriz_caminho(caminho):
     # Preencher com 1 nos pares especificados
     for i, j in pares:
         matriz[i-1, j-1] = 1  # -1 porque Python indexa de 0 e seus números são de 1-5
+    print(f"Caminho: {caminho}")
+    print(f"========= matriz_caminh ========= \n {matriz}")
     return matriz
 
 

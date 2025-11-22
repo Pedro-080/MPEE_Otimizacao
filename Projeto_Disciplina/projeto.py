@@ -54,9 +54,9 @@ def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers
     # matriz = base[np.newaxis, :, :] * Layers_disponiveis_list[:, np.newaxis, np.newaxis]
 
     # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
-    print_matrix3d(matriz)
+    # print_matrix3d(matriz)
     # # print(matriz)
-    print('*'*50)
+    # print('*'*50)
     return matriz
 
 def matrix3d_fatiar_linha(linha, matrix3d):
@@ -193,7 +193,23 @@ def girar_roleta(intervalos):
     # Caso raro: valor exatamente no limite superior
     return intervalos[-1][2]
 
-
+def matriz_caminho_3d(caminho, layers, Nlayers):
+    layers = np.subtract(layers, 1)
+    
+    NCidades = caminho.shape[0]
+    matriz_3d = np.zeros((NCidades, NCidades, Nlayers), dtype=int)
+    
+    pares_com_layers = []
+    for i in range(len(caminho)-1):
+        cidade_origem = int(caminho[i])
+        cidade_destino = int(caminho[i+1])
+        layer = int(layers[i])
+        pares_com_layers.append((cidade_origem, cidade_destino, layer))
+    
+    for origem, destino, layer in pares_com_layers:
+        matriz_3d[origem-1, destino-1, layer] = 1
+    
+    return matriz_3d
 
 # ================================
 # DADOS DO CIRCUITO
@@ -249,8 +265,8 @@ peso_MARIGOLD     = MARIGOLD  .array_calcular_massa_ton(comprimento)
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-rho = 0.01    # Evaporação do feromônio
-fer = 0.1   # Feromônio inicial
+rho = 0.1    # Evaporação do feromônio
+fer = 0.001   # Feromônio inicial
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 2       # Parâmetro de influência de distância
 
@@ -297,15 +313,16 @@ NCabos   = pesos.shape[2]
 # ================================
 # INICIALIZAÇÃO
 # ================================
-num_formigas = 1                                            # Número de formigas, duas por cidade
+num_formigas = 2                                            # Número de formigas, duas por cidade
 tau = np.ones((NCidades, NCidades,NCabos)) * 0.001         # Deposição inicial de feromonio
 n = calcular_n(pesos)                                        # Matriz de termos inversos a distância
 
-lista_tau = [tau] * NCabos
-lista_n   = [n] * NCabos
+# lista_tau = [tau] * NCabos
+# lista_n   = [n] * NCabos
 
-
-iteracoes = 1                                                # Número de iterações
+# print("Matriz n")
+# print_matrix3d(n,condutores)
+iteracoes = 500                                                # Número de iterações
 
 
 
@@ -351,7 +368,7 @@ colunas = np.insert(colunas,0,1)                           #Adiciona a primeira 
 
 
 
- 
+
 
 N_cidades_totais = len(colunas.tolist())                                           #Conta o numero de cidades mesmo que duplicadas
 Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))  
@@ -373,19 +390,19 @@ num_passos = 4
 
 # print(f"num_passos:{num_passos}")
 
+melhor_resultado = [ np.inf , [] ]
 
-FuncObj = np.zeros((num_formigas,1))
 
 for iteracao in range(1,iteracoes+1):
-    print('='*20 +"Iteração: "+ str(iteracao) + '='*20)
+    print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
     Matriz_layer = np.zeros((num_formigas, N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
     Matriz_cidades = np.zeros((num_formigas, len(colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
-
+    FuncObj = np.zeros((num_formigas,1))
     Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))
     Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1)) 
 
     for passo in range(1, num_passos+1):
-        print(f"passo atual:{passo}")
+        # print(f"passo atual:{passo}")
 
 
         for formiga in range(num_formigas):
@@ -415,8 +432,8 @@ for iteracao in range(1,iteracoes+1):
             # print(f"cidade_atual: {cidade_atual}")
 
             Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
-            print(f"Cidades_disponiveis na formiga [{formiga}]: {Cidades_disponiveis[formiga]}")
-            print(f"Cabos usados na formiga [{formiga}]: {Matriz_layer[formiga]}")
+            # print(f"Cidades_disponiveis na formiga [{formiga}]: {Cidades_disponiveis[formiga]}")
+            # print(f"Cabos usados na formiga [{formiga}]: {Matriz_layer[formiga]}")
                 
             Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
@@ -425,18 +442,18 @@ for iteracao in range(1,iteracoes+1):
             Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
             
 
-            print(f"Layers_disponiveis[formiga]: {Layers_disponiveis[formiga]}")
-            print(f"Layers_disponiveis_list: {Layers_disponiveis_list}")
-            print(f"cabo_atual: {cabo_atual}")
+            # 
+            # print(f"Layers_disponiveis_list: {Layers_disponiveis_list}")
+            # print(f"cabo_atual: {cabo_atual}")
             # print(f"resultado: {resultado}")
-            matriz = lista_tau[cabo_atual-1] ** alfa * lista_n[cabo_atual-1] ** beta
-
+            # matriz = lista_tau[cabo_atual-1] ** alfa * lista_n[cabo_atual-1] ** beta
+            matriz = tau ** alfa * n ** beta
             
             
 
             mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],NCidades, Layers_disponiveis_list)
 
-            # print_matrix3d(mascara_cidades_disponiveis)
+            
 
 
             numerador = matriz * mascara_cidades_disponiveis
@@ -448,12 +465,18 @@ for iteracao in range(1,iteracoes+1):
             '''Calcula a probabilidade das proximas cidades'''
             probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
             
+            # print('='*50)
+            # print_matrix3d(probabilidade)
+            # print('='*50)
+
+            print('============ ROLETA ============')
+
             intervalos = criar_roleta_3d(probabilidade)
             proxima_cidade, proximo_cabo = girar_roleta(intervalos)
             proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
             proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
 
-
+            print('='*50)
 
             print(f"Cidade atual: {cidade_atual}")
             print(f"proxima_cidade: {proxima_cidade}")
@@ -461,6 +484,10 @@ for iteracao in range(1,iteracoes+1):
 
             print(f"cabo_atual: {cabo_atual}")
             print(f"proximo_cabo: {proximo_cabo}")
+            print(f"Layers_disponiveis[{formiga}]: {Layers_disponiveis[formiga]}")
+
+            # print_matrix3d(mascara_cidades_disponiveis)
+
             Matriz_layer[formiga, passo] = proximo_cabo
             Matriz_cidades[formiga, passo] = proxima_cidade
 
@@ -470,19 +497,72 @@ for iteracao in range(1,iteracoes+1):
             # print(f"Cidades_disponiveis aqui: \n{Cidades_disponiveis[formiga]}")
 
 
+            cabo_atual = proximo_cabo
+            # print(f'============ FIM DA FORMIGA ============')
         # print(f"Cidade atual: \n{cidade}")
 
             # Cidades_disponiveis_list = (Cidades_disponiveis[formiga] != 0).astype(int)
             # calcular_mascara_cidades_disponiveis(cidade_atual,Cidades_disponiveis[formiga])
             # print(f"Cidades_disponiveis_list atual: \n{Cidades_disponiveis_list}")
 
+    indice_menor_valor = np.argmin(FuncObj)
 
-    # delta_tau = np.ones((NCidades, NCidades,NCabos))
+    novo_melhor_resultado = [ FuncObj[indice_menor_valor].tolist()[0] , Matriz_layer[indice_menor_valor].tolist() ]
+
+    if novo_melhor_resultado[0] < melhor_resultado[0]:
+        melhor_resultado = novo_melhor_resultado
+
+    delta_tau = np.zeros((NCidades, NCidades, NCabos))
+    # lista_delta_tau = [delta_tau] * NCabos
+
+
+    Matriz_layer = Matriz_layer[:, :-1]
+    # print_matrix3d(delta_tau)
+
 
     for formiga in range(num_formigas):
+        # print(f"=== Matriz_layer[formiga] ===\n{Matriz_layer[formiga]}")
+
+        caminhos = Matriz_cidades[formiga]
+        layers   = Matriz_layer[formiga]
         
-        # delta_tau = delta_tau + matriz_caminho(Matriz_Infor[formiga]) * 1/FuncObj[formiga]
+        # caminho_3d = matriz_caminho_3d(caminhos, layers,NCabos)
+        # print(f"shape matriz_caminho_3d: {caminho_3d.shape}")
+        # print("matriz_caminho_3d")
+        # print_matrix3d(caminho_3d)
+
+        delta_tau = delta_tau + matriz_caminho_3d(caminhos, layers,NCabos) * 1/FuncObj[formiga]
+
+        # print(caminho_3d)
+
+
+        # for index, cabo_atual in enumerate(Matriz_layer[formiga]):
+        #     de_cidade    = Matriz_cidades[formiga][index]
+        #     para_cidade  = Matriz_cidades[formiga][index+1]
+        #     # cabo_proximo = Matriz_layer[formiga][index+1]
+
+        #     # lista_delta_tau[cabo_atual-1][de_cidade-1, para_cidade-1, cabo_proximo-1] = 1
+
+        #     print(f"cabo_atual {cabo_atual} ")
+        #     print(f"De {de_cidade} para {para_cidade}")
+        #     # # lista_delta_tau[layer-1] = 
+
+        #     # print()
+        
+        # print(f"Matriz_cidades[formiga]: \n{Matriz_cidades[formiga]}")
+
         ...
+
+    tau = (1-rho)*tau + delta_tau
+    print_matrix3d(tau,condutores)
+
+
+    # for cabo in range(NCabos):
+    
+
+        # delta_tau = delta_tau + matriz_caminho(Matriz_Infor[formiga]) * 1/FuncObj[formiga]
+        
+
 # print(f"Cidades_disponiveis: \n{Cidades_disponiveis}")
 # # print(f"matriz {matriz.shape}")
 # print_matrix3d(matriz)
@@ -491,9 +571,9 @@ for iteracao in range(1,iteracoes+1):
 # # print(f"denominador: { denominador}")
 # print_matrix3d(probabilidade)
 # print(f"probabilidade total: {np.sum(probabilidade)}")
-print(f"Matriz_layer: \n{Matriz_layer}")
-print(f"Matriz_cidades: \n{Matriz_cidades}")
-print(f"FuncObj: \n{FuncObj}")
+    print(f"Matriz_layer: \n{Matriz_layer}")
+    print(f"Matriz_cidades: \n{Matriz_cidades}")
+    print(f"FuncObj: \n{FuncObj}")
 
 # intervalos = criar_roleta_3d(probabilidade)
 
@@ -504,3 +584,14 @@ print(f"FuncObj: \n{FuncObj}")
 
 # print(f"proxima_cidade: {proxima_cidade}")
 # print(f"proximo_cabo: {proximo_cabo}")
+
+
+# ================================
+# RESULTADOS FINAIS
+# ================================
+print('\n' + '='*50)
+print('RESULTADO FINAL')
+print('='*50)
+
+print(f"O melhor resultado é: {melhor_resultado[0]:.2f}")
+print(f"O melhor caminho é: {melhor_resultado[1]}")
