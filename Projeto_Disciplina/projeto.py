@@ -161,7 +161,8 @@ def criar_roleta_3d(probabilidade):
         if probabilidade > 0:  # Ignorar elementos com probabilidade zero
             fim = inicio + probabilidade
             intervalos.append((inicio, fim, coordenada, indice))
-            print(f"Elemento {indice} (coord {coordenada}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
+            coordenada_print = tuple(x + 1 for x in coordenada)
+            print(f"Elemento {indice+1} (coord {coordenada_print}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
             inicio = fim
             indice += 1
     
@@ -237,7 +238,8 @@ agrupamento = np.array([
     [    0,    0,    0,    0,    0]
 ])
 
-condutores = ['OXLIP', 'GOLDENTUFT', 'COSMOS', 'ORCHID', 'ARBUTUS' , 'ANEMONE', 'MAGNOLIA', 'MARIGOLD']
+# condutores = ['OXLIP', 'GOLDENTUFT', 'COSMOS', 'ORCHID', 'ARBUTUS' , 'ANEMONE', 'MAGNOLIA', 'MARIGOLD']
+condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
 
 Pot_acumulado_MW = agrupamento * Pot_aero_MW
 
@@ -265,21 +267,29 @@ peso_MARIGOLD     = MARIGOLD  .array_calcular_massa_ton(comprimento)
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-rho = 0.1    # Evaporação do feromônio
+rho = 0.5   # Evaporação do feromônio
 fer = 0.001   # Feromônio inicial
 alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 2       # Parâmetro de influência de distância
+beta = 5       # Parâmetro de influência de distância
 
+iteracoes = 100                                                # Número de iterações
+num_formigas = 20                                            # Número de formigas, duas por cidade
+
+# pesos = np.stack([
+#     peso_OXLIP,
+#     peso_GOLDENTUFT,
+#     peso_COSMOS,
+#     peso_ORCHID,
+#     peso_ARBUTUS,
+#     peso_ANEMONE,
+#     peso_MAGNOLIA,
+#     peso_MARIGOLD
+# ], axis=2)
 
 
 pesos = np.stack([
     peso_OXLIP,
-    peso_GOLDENTUFT,
-    peso_COSMOS,
     peso_ORCHID,
-    peso_ARBUTUS,
-    peso_ANEMONE,
-    peso_MAGNOLIA,
     peso_MARIGOLD
 ], axis=2)
 
@@ -287,16 +297,25 @@ pesos = np.stack([
 
 # print(f"matriz pesos: \n{pesos}")
 
+# perdas = np.stack([
+#     perdas_OXLIP,
+#     perdas_GOLDENTUFT,
+#     perdas_COSMOS,
+#     perdas_ORCHID,
+#     perdas_ARBUTUS,
+#     perdas_ANEMONE,
+#     perdas_MAGNOLIA,
+#     perdas_MARIGOLD
+# ], axis=2)
+
 perdas = np.stack([
     perdas_OXLIP,
-    perdas_GOLDENTUFT,
-    perdas_COSMOS,
     perdas_ORCHID,
-    perdas_ARBUTUS,
-    perdas_ANEMONE,
-    perdas_MAGNOLIA,
     perdas_MARIGOLD
 ], axis=2)
+
+
+
 
 # print("perdas")
 # print_matrix3d(perdas,condutores)
@@ -313,8 +332,8 @@ NCabos   = pesos.shape[2]
 # ================================
 # INICIALIZAÇÃO
 # ================================
-num_formigas = 2                                            # Número de formigas, duas por cidade
-tau = np.ones((NCidades, NCidades,NCabos)) * 0.001         # Deposição inicial de feromonio
+
+tau = np.ones((NCidades, NCidades,NCabos)) * fer         # Deposição inicial de feromonio
 n = calcular_n(pesos)                                        # Matriz de termos inversos a distância
 
 # lista_tau = [tau] * NCabos
@@ -322,7 +341,6 @@ n = calcular_n(pesos)                                        # Matriz de termos 
 
 # print("Matriz n")
 # print_matrix3d(n,condutores)
-iteracoes = 500                                                # Número de iterações
 
 
 
@@ -406,7 +424,7 @@ for iteracao in range(1,iteracoes+1):
 
 
         for formiga in range(num_formigas):
-            print('='*20 +"formiga: "+ str(formiga) + '='*20)
+            print('='*20 +"formiga: ["+ str(formiga) + "] - passo [" + str(passo) +"]" +'='*20)
             # print(f"Cidades_disponiveis no começo da formiga: \n{Cidades_disponiveis}")
             # linha_limpa = [0 if x == cidade_atual else x for x in Cidades_disponiveis[formiga]]
             # Cidades_disponiveis[formiga] = linha_limpa
@@ -435,7 +453,8 @@ for iteracao in range(1,iteracoes+1):
             # print(f"Cidades_disponiveis na formiga [{formiga}]: {Cidades_disponiveis[formiga]}")
             # print(f"Cabos usados na formiga [{formiga}]: {Matriz_layer[formiga]}")
                 
-            Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+            '''Remove os cabos inferiores aos já escolhidos '''
+            # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
 
 
@@ -469,22 +488,23 @@ for iteracao in range(1,iteracoes+1):
             # print_matrix3d(probabilidade)
             # print('='*50)
 
-            print('============ ROLETA ============')
+            # print(f"Layers_disponiveis[{formiga}]: {Layers_disponiveis[formiga]}")
+            # print(f"Cidade atual: {cidade_atual}")
+            # print(f"cabo_atual: {cabo_atual}")
+
+            # print('============ ROLETA ============')
 
             intervalos = criar_roleta_3d(probabilidade)
             proxima_cidade, proximo_cabo = girar_roleta(intervalos)
             proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
             proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
 
-            print('='*50)
+            # print('='*50)
 
-            print(f"Cidade atual: {cidade_atual}")
-            print(f"proxima_cidade: {proxima_cidade}")
-
-
-            print(f"cabo_atual: {cabo_atual}")
-            print(f"proximo_cabo: {proximo_cabo}")
-            print(f"Layers_disponiveis[{formiga}]: {Layers_disponiveis[formiga]}")
+            
+            # print(f"proxima_cidade: {proxima_cidade}")
+            # print(f"proximo_cabo: {proximo_cabo}")
+            
 
             # print_matrix3d(mascara_cidades_disponiveis)
 
@@ -550,12 +570,20 @@ for iteracao in range(1,iteracoes+1):
         #     # print()
         
         # print(f"Matriz_cidades[formiga]: \n{Matriz_cidades[formiga]}")
+        # print('='*50)
+        # print(f"Matriz_layer formiaga[{formiga}]: \n{Matriz_layer[formiga]}")
+        # print(f"Matriz_cidades formiaga[{formiga}]: \n{Matriz_cidades[formiga]}")
+        # print(f"delta_tau formiaga[{formiga}]")
+        # print_matrix3d(delta_tau,condutores)
+        # print('='*50)
 
         ...
-
+    
     tau = (1-rho)*tau + delta_tau
+    print('='*50)
+    print(f"tau: ")
     print_matrix3d(tau,condutores)
-
+    print('='*50)
 
     # for cabo in range(NCabos):
     
