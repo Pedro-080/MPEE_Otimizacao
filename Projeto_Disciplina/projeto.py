@@ -163,7 +163,7 @@ def criar_roleta_3d(probabilidade,Debug_Roleta = False):
             intervalos.append((inicio, fim, coordenada, indice))
             coordenada_print = tuple(x + 1 for x in coordenada)
             if Debug_Roleta:
-                print('============ ROLETA ============')
+                # print('============ ROLETA ============')
                 print(f"Elemento {indice+1} (coord {coordenada_print}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
             inicio = fim
             indice += 1
@@ -225,6 +225,10 @@ FP           = 0.95
 FC_100       = 1 
 perda_maxima = 2   # 2%
 
+Custo_ton_Al = 15000  #Custo por tonelada de aluminio
+
+
+
 # DADOS DE ENTRADA
 comprimento = np.array([
     [    0, 1000,    0,    0,    0 ],
@@ -274,9 +278,9 @@ peso_MARIGOLD     = MARIGOLD  .array_calcular_massa_ton(comprimento)
 rho = 0.1   # Evaporação do feromônio
 fer = 0.1   # Feromônio inicial
 alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 2       # Parâmetro de influência de distância
+beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 5                                              # Número de iterações
+iteracoes = 2                                              # Número de iterações
 num_formigas = 5                                            # Número de formigas, duas por cidade
 
 # ================================
@@ -286,7 +290,7 @@ num_formigas = 5                                            # Número de formiga
 Debug_Roleta  = False      #True para exibir, False para não exibir
 Debug_tau     = False      #True para exibir, False para não exibir
 Debug_formiga = False      #True para exibir, False para não exibir
-Debug_layers  = True      #True para exibir, False para não exibir
+Debug_layers  = False      #True para exibir, False para não exibir
 
 
 
@@ -311,6 +315,11 @@ pesos = np.stack([
 
 
 # print(f"matriz pesos: \n{pesos}")
+# print(f"peso_OXLIP: {peso_OXLIP}")
+# print(f"peso_ORCHID: {peso_ORCHID}")
+# print(f"peso_MARIGOLD: {peso_MARIGOLD}")
+print_matrix3d(pesos,condutores)
+
 
 # perdas = np.stack([
 #     perdas_OXLIP,
@@ -403,6 +412,9 @@ for iteracao in range(1,iteracoes+1):
             numerador = matriz * mascara_cidades_disponiveis
             denominador = np.sum(numerador)
 
+            # print(f"Cidades_disponiveis[formiga]: {Cidades_disponiveis[formiga]}")
+            # print_matrix3d(mascara_cidades_disponiveis,condutores)
+
             '''Calcula a probabilidade das proximas cidades'''
             probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
             
@@ -424,6 +436,9 @@ for iteracao in range(1,iteracoes+1):
             Matriz_layer[formiga, passo] = proximo_cabo
             Matriz_cidades[formiga, passo] = proxima_cidade
 
+    
+    
+
             FuncObj[formiga] = FuncObj[formiga] + pesos[cidade_atual-1 , proxima_cidade-1 ,cabo_atual -1] 
 
             cabo_atual = proximo_cabo
@@ -442,7 +457,7 @@ for iteracao in range(1,iteracoes+1):
 
 
     for formiga in range(num_formigas):
-        # print(f"=== Matriz_layer[formiga] ===\n{Matriz_layer[formiga]}")
+        print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")
 
         caminhos   = Matriz_cidades[formiga]
         layers     = Matriz_layer[formiga]
@@ -450,15 +465,24 @@ for iteracao in range(1,iteracoes+1):
         # caminho_3d = matriz_caminho_3d(caminhos, layers,NCabos)
         # print(f"shape matriz_caminho_3d: {caminho_3d.shape}")
         # print("matriz_caminho_3d")
-        # print_matrix3d(caminho_3d)
+        print_matrix3d(caminho_3d,condutores)
         perdas_formiga = caminho_3d * perdas
         perdas_totais = np.sum(perdas_formiga)
 
+
+
+        Custo_em_Al = np.sum(caminho_3d * pesos)
+        print(f"total em Al :{np.sum(pesos)} ton")
+        print(f"Custo em Al da formiga :[{formiga:02d}]: {Custo_em_Al:.4f}")
+
         # print_matrix3d(perdas_formiga)
-        # print(f"Perdas totais: {perdas_totais}")
-        if perdas_totais <= perda_maxima:
-            print(f"perdas_totais: {perdas_totais}")
-            delta_tau = delta_tau + caminho_3d  * 1/FuncObj[formiga]
+        print(f"Perdas totais: {perdas_totais}")
+
+        delta_tau = delta_tau + caminho_3d  * 1/FuncObj[formiga]
+
+        # if perdas_totais <= perda_maxima:
+        #     print(f"perdas_totais: {perdas_totais}")
+        #     delta_tau = delta_tau + caminho_3d  * 1/FuncObj[formiga]
 
     
     tau = (1-rho)*tau + delta_tau
@@ -495,6 +519,6 @@ print('\n' + '='*50)
 print('RESULTADO FINAL')
 print('='*50)
 
-print(f"O melhor resultado é: {melhor_resultado[0]:.2f}")
+print(f"O melhor resultado é: {melhor_resultado[0]:.4f}")
 print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]}")
 print(f"O melhor caminho é através dos vértices  : {melhor_resultado[2]}")

@@ -3,7 +3,7 @@
 from cabos import OXLIP, GOLDENTUFT, COSMOS, ORCHID, ARBUTUS , ANEMONE, MAGNOLIA, MARIGOLD
 import numpy as np
 
-Pot_aero_MW = 6
+Pot_aero_MW = 8
 Pot_circ_MW = 18
 FP          = 0.95
 FC_100      = 1 
