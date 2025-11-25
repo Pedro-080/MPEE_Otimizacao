@@ -40,7 +40,7 @@ class Cabo():
         return np.round(resultado,4)
         ...
 
- # NOVOS MÉTODOS VECTORIZADOS
+# NOVOS MÉTODOS VECTORIZADOS
     def array_calcular_perdas_percent(self, comprimentos_array, potencias_array, potencia_total_MW, FP, FC=1):
         """
         Calcula perdas para arrays de comprimentos e potências.
@@ -96,6 +96,7 @@ class Cabo():
     #     )
         
     #     return resultados
+
 
     def array_calcular_massa_ton(self,comprimentos_array):
         """
