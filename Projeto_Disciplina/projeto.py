@@ -263,7 +263,7 @@ fer = 0.1   # Feromônio inicial
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 10                                              # Número de iterações
+iteracoes = 2                                              # Número de iterações
 num_formigas = 5                                            # Número de formigas, duas por cidade
 
 # ================================
@@ -347,8 +347,8 @@ Custo = Custo_peso_cabos #+ Custo_perdas
 
 # print(f"Pot_circ_MWh_ano: {Pot_circ_MWh_ano}")
 
-print("=========== Custos perdas ============")
-print_matrix3d(Custo_perdas,condutores)
+# print("=========== Custos perdas ============")
+# print_matrix3d(Custo_perdas,condutores)
 
 # print("=========== Custos cabos ============")
 # print_matrix3d(Custo_peso_cabos,condutores)
@@ -528,6 +528,8 @@ for iteracao in range(1,iteracoes+1):
         # print_matrix3d(caminho_3d,condutores)
         
         FuncCusto[:, -1] = np.sum(FuncCusto[:, :-1], axis=1)     # Define a ultima coluna como a soma das colunas anteriores
+
+        print(f"custo total aqui: {FuncCusto[formiga, -1]}")
 
         # print(f"total em Al :{Massa_total_Al:.4f} ton")
         # print(f"Custo em Al da formiga :[{formiga:02d}]: {Custo_em_Al:.4f}")
