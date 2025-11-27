@@ -260,11 +260,11 @@ Preco_MHh = 386.41                                        # Preço da energia po
 # ================================
 rho = 0.5   # Evaporação do feromônio
 fer = 0.1   # Feromônio inicial
-alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 5       # Parâmetro de influência de distância
+alfa = 5      # Parâmetro de influência de feromônio, inicial
+beta = 1       # Parâmetro de influência de distância
 
-iteracoes = 2                                              # Número de iterações
-num_formigas = 5                                            # Número de formigas, duas por cidade
+iteracoes = 100                                              # Número de iterações
+num_formigas = 10                                            # Número de formigas, duas por cidade
 
 # ================================
 # PARÂMETROS DE DEBUG!!!
@@ -376,6 +376,9 @@ num_passos = np.count_nonzero(comprimento)
 
 melhor_resultado = [ np.inf , [] , [], np.inf]  #massa total, layers percorridos, caminho percorrido, perda total
 
+top_resultados = np.zeros((10,4))       # [[vertices], [condutores],[preco_rateado],[preco_final]
+
+# print(f"top results: {top_10_resultados}")
 
 for iteracao in range(1,iteracoes+1):
     print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
@@ -453,17 +456,7 @@ for iteracao in range(1,iteracoes+1):
             cabo_atual = proximo_cabo
 
 
-    # indice_menor_valor = np.argmin(FuncCusto)
 
-    # novo_melhor_resultado = [ FuncCusto[indice_menor_valor].tolist()[0] , Matriz_layer[indice_menor_valor].tolist(), Matriz_cidades[indice_menor_valor].tolist() ]
-
-    
-
-
-
-
-    # if novo_melhor_resultado[0] < melhor_resultado[0]:
-    #     melhor_resultado = novo_melhor_resultado
 
     delta_tau = np.zeros((NCidades, NCidades, NCabos))
 
@@ -472,6 +465,10 @@ for iteracao in range(1,iteracoes+1):
 
     FuncCusto          = np.zeros((num_formigas,3))
     FuncPerdas_percent = np.zeros((num_formigas,1))
+
+
+    
+
 
     for formiga in range(num_formigas):
         print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")
@@ -492,27 +489,34 @@ for iteracao in range(1,iteracoes+1):
         perdas_totais_MWh      = np.sum(perdas_formiga_MWh)
 
         # print(f"perdas_totais_MWh: {perdas_totais_MWh}")
-        print_matrix3d(perdas_formiga_MWh,condutores)
+        # print_matrix3d(perdas_formiga_MWh,condutores)
 
 
-        perdas_MWh_ano = perdas_totais_percent/100 * Pot_circ_MWh_ano * FC
+        # perdas_MWh_ano = perdas_totais_percent/100 * Pot_circ_MWh_ano * FC
 
         FuncPerdas_percent[formiga] = perdas_totais_percent
 
-        Custo_perdas     = perdas/100 * Pot_circ_MWh_ano * FC * Preco_MHh * Vida_util_anos
+        Custo_perdas       = perdas_formiga_MWh  * Preco_MHh * FC #* Vida_util_anos
+        Custo_perdas_valor = np.sum(Custo_perdas)
+
+        # print("=========== INICIO DEBUG Custo_perdas ============")
+
+        # print_matrix3d(Custo_perdas,condutores)
 
 
-        # print(f"")
+        # print(f"Custo_perdas minimizado: {Custo_perdas}")
+        
+        # print(f"type(Custo_perdas): {type(Custo_perdas)}")
 
         if perdas_totais_percent > perda_maxima_percent:
-            print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
-            perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
+            # print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
+            # perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
 
-            Custo_perda = np.exp(perda_excedente_percent) * perdas_MWh_ano * Preco_MHh * Vida_util_anos
+            FuncCusto[formiga, 1] =  Custo_perdas_valor
         else:
-            Custo_perda = 0
+            FuncCusto[formiga, 1] = 0
 
-        FuncCusto[formiga, 1] = Custo_perda
+        
         
 
         # print(f"Pot_circ_MW: {Pot_circ_MW}")
@@ -537,13 +541,28 @@ for iteracao in range(1,iteracoes+1):
         # print_matrix3d(perdas_formiga_percent)
         # print(f"Perdas totais: {perdas_totais}")
 
-        delta_tau = delta_tau + caminho_3d  * 1/np.sum(FuncCusto[formiga, :])
+        delta_tau = delta_tau + caminho_3d  * 1/(FuncCusto[formiga, -1])
 
         # if perdas_totais <= perda_maxima_percent:
         #     print(f"perdas_totais: {perdas_totais}")
         #     delta_tau = delta_tau + caminho_3d  * 1/FuncCusto[formiga]
 
     
+
+    indice_menor_valor = np.argmin(FuncCusto[:,-1])
+    print(f"indice_menor_valor: {indice_menor_valor}")
+
+    novo_melhor_resultado = [ FuncCusto[indice_menor_valor].tolist()[0] , Matriz_layer[indice_menor_valor].tolist(), Matriz_cidades[indice_menor_valor].tolist(), FuncPerdas_percent[indice_menor_valor,0]]
+
+    
+
+    #massa total, layers percorridos, caminho percorrido, perda total
+
+
+    if novo_melhor_resultado[0] < melhor_resultado[0]:
+        melhor_resultado = novo_melhor_resultado
+
+
     tau = (1-rho)*tau + delta_tau
 
     if Debug_tau:
@@ -573,11 +592,11 @@ for iteracao in range(1,iteracoes+1):
 
 
 
-"""
+
 # ================================
 # RESULTADOS FINAIS
 # ================================
-melhor_resultado[1].pop()
+# melhor_resultado[1].pop()
 # melhor_resultado[1] = melhor_resultado[1][-1]
 
 
@@ -586,7 +605,7 @@ print('RESULTADO FINAL')
 print('='*50)
 
 print(f"O melhor resultado é: {melhor_resultado[0]:.4f}")
-print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]}")
+print(f"A uma perda percentual de: {melhor_resultado[3]:.2f}%")
+print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]:}")
 print(f"O melhor caminho é através dos vértices  : {melhor_resultado[2]}")
 
-"""
