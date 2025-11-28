@@ -84,8 +84,8 @@ def Remover_elemento(lista_cidades,cidade):
     return array_modificado
 
 def print_matrix3d(matrix_3d,condutores=[]):
-    num_linhas =  matrix_3d.shape[0]
-    num_colunas =  matrix_3d.shape[1]
+    # num_linhas =  matrix_3d.shape[0]
+    # num_colunas =  matrix_3d.shape[1]
     num_layers = matrix_3d.shape[2]
 
     # print(f"num_layers: {num_layers}")
@@ -99,6 +99,33 @@ def print_matrix3d(matrix_3d,condutores=[]):
             print(f'index {layer}')
         np.set_printoptions(precision=4, floatmode='fixed')
         print(matrix_3d[:,:,layer])
+
+def print_matrix3d_percent(matrix_3d,condutores=[]):
+    # num_linhas =  matrix_3d.shape[0]
+    # num_colunas =  matrix_3d.shape[1]
+    soma_matrix_3d = np.sum(matrix_3d)
+    # print(f"soma_matrix_3d percent: {soma_matrix_3d}")
+
+    num_layers = matrix_3d.shape[2]
+
+    # print(f"num_layers: {num_layers}")
+    # print(f"num_linhas: {num_linhas}")
+    # print(f"num_colunas: {num_colunas}")
+
+    for layer in range(num_layers):
+        if condutores != []:
+            print(f'Condutor: {condutores[layer]}')
+        else:
+            print(f'index {layer}')
+        np.set_printoptions(precision=4, floatmode='fixed')
+
+        # valor = matrix_3d[:,:,layer]/soma_matrix_3d
+        # Substituir zeros usando np.where()
+        # arr_str = np.where(arr == 0, '-', arr.astype(str))
+        
+        print(matrix_3d[:,:,layer]/soma_matrix_3d)
+
+
 
 def calcular_n(matriz):
     """
@@ -258,23 +285,25 @@ Preco_MHh = 386.41                                        # Preço da energia po
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-rho = 0.5   # Evaporação do feromônio
+q = 1e5     #fator de multiplicação do ganho de feromonio delta_tau
+rho = 0.6   # Evaporação do feromônio
 fer = 0.1   # Feromônio inicial
-alfa = 5      # Parâmetro de influência de feromônio, inicial
-beta = 1       # Parâmetro de influência de distância
+fer_max = 2 * rho
+alfa = 1      # Parâmetro de influência de feromônio, inicial
+beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 100                                              # Número de iterações
-num_formigas = 10                                            # Número de formigas, duas por cidade
+iteracoes = 50                                              # Número de iterações
+num_formigas = 5                                             # Número de formigas, duas por cidade
 
 # ================================
 # PARÂMETROS DE DEBUG!!!
 # ================================
 
-Debug_Roleta  = False      #True para exibir, False para não exibir
-Debug_tau     = False      #True para exibir, False para não exibir
-Debug_formiga = False      #True para exibir, False para não exibir
-Debug_layers  = True      #True para exibir, False para não exibir
-
+Debug_Roleta     = False       #True para exibir, False para não exibir
+Debug_tau        = True      #True para exibir, False para não exibir
+Debug_formiga    = False      #True para exibir, False para não exibir
+Debug_layers     = True      #True para exibir, False para não exibir
+Debug_delta_tau  = True
 
 
 condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
@@ -414,7 +443,7 @@ for iteracao in range(1,iteracoes+1):
 
                 
             '''Remove os cabos inferiores aos já escolhidos '''
-            # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+            Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
 
             Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
@@ -511,8 +540,9 @@ for iteracao in range(1,iteracoes+1):
         if perdas_totais_percent > perda_maxima_percent:
             # print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
             # perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
-
-            FuncCusto[formiga, 1] =  Custo_perdas_valor
+            '''Comentado para teste'''
+            # FuncCusto[formiga, 1] =  Custo_perdas_valor
+            FuncCusto[formiga, 1] = 2 * Custo_em_Al
         else:
             FuncCusto[formiga, 1] = 0
 
@@ -541,7 +571,7 @@ for iteracao in range(1,iteracoes+1):
         # print_matrix3d(perdas_formiga_percent)
         # print(f"Perdas totais: {perdas_totais}")
 
-        delta_tau = delta_tau + caminho_3d  * 1/(FuncCusto[formiga, -1])
+        delta_tau = delta_tau + caminho_3d  * q /(FuncCusto[formiga, -1])
 
         # if perdas_totais <= perda_maxima_percent:
         #     print(f"perdas_totais: {perdas_totais}")
@@ -562,16 +592,34 @@ for iteracao in range(1,iteracoes+1):
     if novo_melhor_resultado[0] < melhor_resultado[0]:
         melhor_resultado = novo_melhor_resultado
 
+    # teste = tau + delta_tau
+
+    delta_tau = np.clip(delta_tau, None, fer_max)
 
     tau = (1-rho)*tau + delta_tau
 
+    
+
     if Debug_tau:
         print('='*50)
-        print(f"tau: ")
-        print_matrix3d(tau,condutores)
+        print(f"tau percent: ")
+        print_matrix3d_percent(tau,condutores)
+        # print(f"tau: ")
+        # print_matrix3d(tau,condutores)
+
         print('='*50)
 
+    if Debug_delta_tau:
+        print('='*50)
+        # print(f"delta_tau percent: ")
+        # print_matrix3d_percent(delta_tau,condutores)
+        print(f"delta_tau: ")
+        print_matrix3d(delta_tau,condutores)
 
+        print('='*50)
+
+    # print(f"tau + delta tau :")
+    # print_matrix3d(teste)
 
 # print_matrix3d(probabilidade)
 # print(f"probabilidade total: {np.sum(probabilidade)}")
