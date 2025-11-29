@@ -84,8 +84,8 @@ def Remover_elemento(lista_cidades,cidade):
     return array_modificado
 
 def print_matrix3d(matrix_3d,condutores=[]):
-    num_linhas =  matrix_3d.shape[0]
-    num_colunas =  matrix_3d.shape[1]
+    # num_linhas =  matrix_3d.shape[0]
+    # num_colunas =  matrix_3d.shape[1]
     num_layers = matrix_3d.shape[2]
 
     # print(f"num_layers: {num_layers}")
@@ -99,6 +99,33 @@ def print_matrix3d(matrix_3d,condutores=[]):
             print(f'index {layer}')
         np.set_printoptions(precision=4, floatmode='fixed')
         print(matrix_3d[:,:,layer])
+
+def print_matrix3d_percent(matrix_3d,condutores=[]):
+    # num_linhas =  matrix_3d.shape[0]
+    # num_colunas =  matrix_3d.shape[1]
+    soma_matrix_3d = np.sum(matrix_3d)
+    # print(f"soma_matrix_3d percent: {soma_matrix_3d}")
+
+    num_layers = matrix_3d.shape[2]
+
+    # print(f"num_layers: {num_layers}")
+    # print(f"num_linhas: {num_linhas}")
+    # print(f"num_colunas: {num_colunas}")
+
+    for layer in range(num_layers):
+        if condutores != []:
+            print(f'Condutor: {condutores[layer]}')
+        else:
+            print(f'index {layer}')
+        np.set_printoptions(precision=4, floatmode='fixed')
+
+        # valor = matrix_3d[:,:,layer]/soma_matrix_3d
+        # Substituir zeros usando np.where()
+        # arr_str = np.where(arr == 0, '-', arr.astype(str))
+        
+        print(matrix_3d[:,:,layer]/soma_matrix_3d)
+
+
 
 def calcular_n(matriz):
     """
@@ -216,22 +243,12 @@ def matriz_caminho_3d(caminho, layers, Nlayers):
     
     return matriz_3d
 
+
 # ================================
-# DADOS DO CIRCUITO
+# INFORMAÇÃO DOS CIRCUITOS
 # ================================
-Pot_aero_MW  = 6
-Pot_circ_MW  = 18
-Pot_circ_MWh_ano = Pot_circ_MW * 24 * 365
-FP           = 0.95
-FC       = 1 
-perda_maxima_percent = 2   # 2%
-Vida_util_anos = 30
-
-Custo_ton_Al = 15000  #Custo por tonelada de aluminio
-Preco_MHh = 386.41  #Preço por MWh 
-
-
-# DADOS DE ENTRADA
+'''Matriz com a distancia entre cada vértice'''
+# Ainda é preciso tratar o codigo para permitir matrizes não padroes
 comprimento = np.array([
     [    0, 1000,    0,    0,    0 ],
     [    0,    0, 3000,    0,    0],
@@ -240,6 +257,7 @@ comprimento = np.array([
     [    0,    0,    0,    0,    0]
 ])
 
+'''Matriz com agrupamento entre cada vértice'''
 agrupamento = np.array([
     [    0,    1,    0,    0,    0],
     [    0,    0,    2,    0,    0],
@@ -248,64 +266,60 @@ agrupamento = np.array([
     [    0,    0,    0,    0,    0]
 ])
 
-# condutores = ['OXLIP', 'GOLDENTUFT', 'COSMOS', 'ORCHID', 'ARBUTUS' , 'ANEMONE', 'MAGNOLIA', 'MARIGOLD']
-condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
 
-Pot_acumulado_MW = agrupamento * Pot_aero_MW
+# ================================
+# DADOS DO CIRCUITO
+# ================================
+Pot_aero_MW  = 6                                          # Potencia por aerogerador
+Pot_circ_MW  = np.max(agrupamento) * Pot_aero_MW          # Potencia total do circuito
+Pot_circ_MWh_ano = Pot_circ_MW * 24 * 365                 # Potencia total máxima gerada por ano a 100% 
+FP           = 0.95                                       # Fator de potencia 
+FC       = 1                                              # Fator de capacidade considerado. 1 = 100%
+perda_maxima_percent = 2                                  # Pedra máxima global tolerada em porcentagem.  2 = 2%
+Vida_util_anos = 30                                       # Vida util considerada para o empreendimento. 30 = 30 anos
 
-perdas_OXLIP      = OXLIP.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_GOLDENTUFT = GOLDENTUFT.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_COSMOS     = COSMOS.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_ORCHID     = ORCHID.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_ARBUTUS    = ARBUTUS.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_ANEMONE    = ANEMONE.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_MAGNOLIA   = MAGNOLIA.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-perdas_MARIGOLD   = MARIGOLD.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW, Pot_circ_MW, FP, FC)
-
-peso_OXLIP        = OXLIP.array_calcular_massa_ton(comprimento)
-peso_GOLDENTUFT   = GOLDENTUFT.array_calcular_massa_ton(comprimento)
-peso_COSMOS       = COSMOS.array_calcular_massa_ton(comprimento)
-peso_ORCHID       = ORCHID.array_calcular_massa_ton(comprimento)
-peso_ARBUTUS      = ARBUTUS.array_calcular_massa_ton(comprimento)
-peso_ANEMONE      = ANEMONE.array_calcular_massa_ton(comprimento)
-peso_MAGNOLIA     = MAGNOLIA .array_calcular_massa_ton(comprimento)
-peso_MARIGOLD     = MARIGOLD  .array_calcular_massa_ton(comprimento)
-
-
+Custo_ton_Al = 15000                                      # Custo por tonelada de aluminio. 15000 = 15000   R$/ton
+Preco_MHh = 386.41                                        # Preço da energia por MWh.        386.51 = 386.51 r$/kWh
 
 
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-rho = 0.5   # Evaporação do feromônio
+q = 1e5     #fator de multiplicação do ganho de feromonio delta_tau
+rho = 0.6   # Evaporação do feromônio
 fer = 0.1   # Feromônio inicial
+fer_max = 2 * rho
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 10                                              # Número de iterações
-num_formigas = 5                                            # Número de formigas, duas por cidade
+iteracoes = 50                                              # Número de iterações
+num_formigas = 5                                             # Número de formigas, duas por cidade
 
 # ================================
 # PARÂMETROS DE DEBUG!!!
 # ================================
 
-Debug_Roleta  = False      #True para exibir, False para não exibir
-Debug_tau     = False      #True para exibir, False para não exibir
-Debug_formiga = False      #True para exibir, False para não exibir
-Debug_layers  = False      #True para exibir, False para não exibir
+Debug_Roleta     = False      #True para exibir, False para não exibir
+Debug_tau        = False      #True para exibir, False para não exibir
+Debug_formiga    = False      #True para exibir, False para não exibir
+Debug_layers     = False      #True para exibir, False para não exibir
+Debug_delta_tau  = False
+
+
+condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
+
+Pot_acumulado_MW_3d = agrupamento * Pot_aero_MW
 
 
 
-# pesos = np.stack([
-#     peso_OXLIP,
-#     peso_GOLDENTUFT,
-#     peso_COSMOS,
-#     peso_ORCHID,
-#     peso_ARBUTUS,
-#     peso_ANEMONE,
-#     peso_MAGNOLIA,
-#     peso_MARIGOLD
-# ], axis=2)
+perdas_OXLIP      = OXLIP.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW_3d, Pot_circ_MW, FP, FC)
+perdas_ORCHID     = ORCHID.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW_3d, Pot_circ_MW, FP, FC)
+perdas_MARIGOLD   = MARIGOLD.array_calcular_perdas_percent(comprimento, Pot_acumulado_MW_3d, Pot_circ_MW, FP, FC)
+
+peso_OXLIP        = OXLIP.array_calcular_massa_ton(comprimento)
+peso_ORCHID       = ORCHID.array_calcular_massa_ton(comprimento)
+peso_MARIGOLD     = MARIGOLD  .array_calcular_massa_ton(comprimento)
+
 
 
 pesos = np.stack([
@@ -314,25 +328,6 @@ pesos = np.stack([
     peso_MARIGOLD
 ], axis=2)
 
-
-
-# print(f"matriz pesos: \n{pesos}")
-# print(f"peso_OXLIP: {peso_OXLIP}")
-# print(f"peso_ORCHID: {peso_ORCHID}")
-# print(f"peso_MARIGOLD: {peso_MARIGOLD}")
-# print_matrix3d(pesos,condutores)
-
-
-# perdas = np.stack([
-#     perdas_OXLIP,
-#     perdas_GOLDENTUFT,
-#     perdas_COSMOS,
-#     perdas_ORCHID,
-#     perdas_ARBUTUS,
-#     perdas_ANEMONE,
-#     perdas_MAGNOLIA,
-#     perdas_MARIGOLD
-# ], axis=2)
 
 perdas = np.stack([
     perdas_OXLIP,
@@ -366,30 +361,29 @@ Args:
     Preco_MHh        : Preço por MHh estimado, ($/MWh)
     Vida_util_anos   : Tempo de vida do empreendimento, em anos (ano)
 
-
-
-Returns:
-    Tupla com coordenadas (i, j, k) do elemento sorteado
 """
 
 
 
-
+'''O custo está sendo calculado usando apenas o preço do aluminio'''
 Custo_peso_cabos = pesos * Custo_ton_Al
-Custo_perdas     = perdas/100 * Pot_circ_MWh_ano * FC * Preco_MHh * Vida_util_anos
+Custo_perdas     = perdas/100 * Pot_circ_MWh_ano * FC * Preco_MHh
 
-Custo = Custo_peso_cabos + Custo_perdas
+Custo = Custo_peso_cabos #+ Custo_perdas
+
+
+
 
 # print(f"Pot_circ_MWh_ano: {Pot_circ_MWh_ano}")
 
-# print("=========== perdas ============")
-# print_matrix3d(perdas,condutores)
+# print("=========== Custos perdas ============")
+# print_matrix3d(Custo_perdas,condutores)
 
 # print("=========== Custos cabos ============")
 # print_matrix3d(Custo_peso_cabos,condutores)
 
-# print("=========== Custos PERDAS ============")
-# print_matrix3d(Custo_perdas,condutores)
+# print("=========== Custos total ============")
+# print_matrix3d(Custo,condutores)
 
 
 n = calcular_n(Custo)                                        # Matriz de termos inversos a distância
@@ -403,18 +397,23 @@ N_cidades_totais = len(colunas.tolist())                                        
 Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))  
 
 '''Versão correta - Descomentar apos testes'''
+'''É preciso alterar o codigo para permitir o uso de matrizes não padrões'''
 num_passos = np.count_nonzero(comprimento)
-num_passos = 4
+# print(f"num_passos pre: {num_passos}")
+# num_passos = 4
 
 
 melhor_resultado = [ np.inf , [] , [], np.inf]  #massa total, layers percorridos, caminho percorrido, perda total
 
+top_resultados = np.zeros((10,4))       # [[vertices], [condutores],[preco_rateado],[preco_final]
+
+# print(f"top results: {top_10_resultados}")
 
 for iteracao in range(1,iteracoes+1):
     print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
     Matriz_layer = np.zeros((num_formigas, N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
     Matriz_cidades = np.zeros((num_formigas, len(colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
-    FuncCusto = np.zeros((num_formigas,2))
+    
     Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))
     Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1)) 
 
@@ -444,7 +443,7 @@ for iteracao in range(1,iteracoes+1):
 
                 
             '''Remove os cabos inferiores aos já escolhidos '''
-            # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+            Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
 
             Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
@@ -472,8 +471,6 @@ for iteracao in range(1,iteracoes+1):
             # print(f"Cidade atual: {cidade_atual}")
             # print(f"cabo_atual: {cabo_atual}")
 
-            # 
-
             intervalos = criar_roleta_3d(probabilidade, Debug_Roleta)
             proxima_cidade, proximo_cabo = girar_roleta(intervalos, Debug_Roleta)
             proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
@@ -482,29 +479,24 @@ for iteracao in range(1,iteracoes+1):
             Matriz_layer[formiga, passo] = proximo_cabo
             Matriz_cidades[formiga, passo] = proxima_cidade
 
-    
-    
 
-            # FuncCusto[formiga] = FuncCusto[formiga] + pesos[cidade_atual-1 , proxima_cidade-1 ,cabo_atual -1] 
+            # FuncCusto[formiga, 0 ] = FuncCusto[formiga] + Custo[cidade_atual-1 , proxima_cidade-1 ,cabo_atual -1] 
 
             cabo_atual = proximo_cabo
 
-    indice_menor_valor = np.argmin(FuncCusto)
-
-    novo_melhor_resultado = [ FuncCusto[indice_menor_valor].tolist()[0] , Matriz_layer[indice_menor_valor].tolist(), Matriz_cidades[indice_menor_valor].tolist() ]
-
-    
 
 
-
-
-    if novo_melhor_resultado[0] < melhor_resultado[0]:
-        melhor_resultado = novo_melhor_resultado
 
     delta_tau = np.zeros((NCidades, NCidades, NCabos))
 
-    Matriz_layer = Matriz_layer[:, :-1]
-    # print_matrix3d(delta_tau)
+    Matriz_layer = Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!
+    
+
+    FuncCusto          = np.zeros((num_formigas,3))
+    FuncPerdas_percent = np.zeros((num_formigas,1))
+
+
+    
 
 
     for formiga in range(num_formigas):
@@ -520,20 +512,32 @@ for iteracao in range(1,iteracoes+1):
         FuncCusto[formiga, 0] = Custo_em_Al
 
         '''Calcula o custo das perdas'''
-        perdas_formiga = caminho_3d * perdas
-        perdas_totais_percent = np.sum(perdas_formiga)
-        perdas_MWh_ano = perdas_totais_percent/100 * Pot_circ_MWh_ano * FC
+        perdas_formiga_percent = caminho_3d * perdas                               # Cria uma mascara da matriz de perdas em porcentagem
+        perdas_formiga_MWh     = perdas_formiga_percent/100 * Pot_circ_MWh_ano         # Cria uma mascara da matriz de perdas em MWh
+        perdas_totais_percent  = np.sum(perdas_formiga_percent)      
+        perdas_totais_MWh      = np.sum(perdas_formiga_MWh)
+
+        # print(f"perdas_totais_MWh: {perdas_totais_MWh}")
+        # print_matrix3d(perdas_formiga_MWh,condutores)
+
+
+        # perdas_MWh_ano = perdas_totais_percent/100 * Pot_circ_MWh_ano * FC
+
+        FuncPerdas_percent[formiga] = perdas_totais_percent
+
+        Custo_perdas       = perdas_formiga_MWh  * Preco_MHh * FC #* Vida_util_anos
+        Custo_perdas_valor = np.sum(Custo_perdas)
 
         if perdas_totais_percent > perda_maxima_percent:
-            print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
-            perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
-
-
-            Custo_perda = np.exp(perda_excedente_percent) * perdas_MWh_ano * Preco_MHh * Vida_util_anos
+            # print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
+            # perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
+            '''Comentado para teste'''
+            # FuncCusto[formiga, 1] =  Custo_perdas_valor
+            FuncCusto[formiga, 1] = 3 * Custo_em_Al
         else:
-            Custo_perda = 0
+            FuncCusto[formiga, 1] = 0
 
-        FuncCusto[formiga, 1] = Custo_perda
+        
         
 
         # print(f"Pot_circ_MW: {Pot_circ_MW}")
@@ -548,31 +552,65 @@ for iteracao in range(1,iteracoes+1):
         # print("matriz_caminho_3d")
         # print_matrix3d(caminho_3d,condutores)
         
-        
+        FuncCusto[:, -1] = np.sum(FuncCusto[:, :-1], axis=1)     # Define a ultima coluna como a soma das colunas anteriores
 
+        print(f"custo total aqui: {FuncCusto[formiga, -1]}")
 
         # print(f"total em Al :{Massa_total_Al:.4f} ton")
         # print(f"Custo em Al da formiga :[{formiga:02d}]: {Custo_em_Al:.4f}")
 
-        # print_matrix3d(perdas_formiga)
+        # print_matrix3d(perdas_formiga_percent)
         # print(f"Perdas totais: {perdas_totais}")
 
-        delta_tau = delta_tau + caminho_3d  * 1/np.sum(FuncCusto[formiga, :])
+        delta_tau = delta_tau + caminho_3d  * q /(FuncCusto[formiga, -1])
 
         # if perdas_totais <= perda_maxima_percent:
         #     print(f"perdas_totais: {perdas_totais}")
         #     delta_tau = delta_tau + caminho_3d  * 1/FuncCusto[formiga]
 
     
+
+    indice_menor_valor = np.argmin(FuncCusto[:,-1])
+    print(f"indice_menor_valor: {indice_menor_valor}")
+
+    novo_melhor_resultado = [ FuncCusto[indice_menor_valor].tolist()[0] , Matriz_layer[indice_menor_valor].tolist(), Matriz_cidades[indice_menor_valor].tolist(), FuncPerdas_percent[indice_menor_valor,0]]
+
+    
+
+    #massa total, layers percorridos, caminho percorrido, perda total
+
+
+    if novo_melhor_resultado[0] < melhor_resultado[0]:
+        melhor_resultado = novo_melhor_resultado
+
+    # teste = tau + delta_tau
+
+    delta_tau = np.clip(delta_tau, None, fer_max)
+
     tau = (1-rho)*tau + delta_tau
+
+    
 
     if Debug_tau:
         print('='*50)
-        print(f"tau: ")
-        print_matrix3d(tau,condutores)
+        print(f"tau percent: ")
+        print_matrix3d_percent(tau,condutores)
+        # print(f"tau: ")
+        # print_matrix3d(tau,condutores)
+
         print('='*50)
 
+    if Debug_delta_tau:
+        print('='*50)
+        # print(f"delta_tau percent: ")
+        # print_matrix3d_percent(delta_tau,condutores)
+        print(f"delta_tau: ")
+        print_matrix3d(delta_tau,condutores)
 
+        print('='*50)
+
+    # print(f"tau + delta tau :")
+    # print_matrix3d(teste)
 
 # print_matrix3d(probabilidade)
 # print(f"probabilidade total: {np.sum(probabilidade)}")
@@ -585,14 +623,19 @@ for iteracao in range(1,iteracoes+1):
     print("=========== FuncCusto ============")
     print(FuncCusto)
 
+    print("=========== FuncPerdas_percent ============")
+    print(FuncPerdas_percent)
+
 # print(f"proxima_cidade: {proxima_cidade}")
 # print(f"proximo_cabo: {proximo_cabo}")
+
+
 
 
 # ================================
 # RESULTADOS FINAIS
 # ================================
-melhor_resultado[1].pop()
+# melhor_resultado[1].pop()
 # melhor_resultado[1] = melhor_resultado[1][-1]
 
 
@@ -601,5 +644,7 @@ print('RESULTADO FINAL')
 print('='*50)
 
 print(f"O melhor resultado é: {melhor_resultado[0]:.4f}")
-print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]}")
+print(f"A uma perda percentual de: {melhor_resultado[3]:.2f}%")
+print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]:}")
 print(f"O melhor caminho é através dos vértices  : {melhor_resultado[2]}")
+
