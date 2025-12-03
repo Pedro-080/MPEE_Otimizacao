@@ -302,7 +302,7 @@ fer_max = 2 * rho
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 5                                              # Número de iterações
+iteracoes = 50                                              # Número de iterações
 num_formigas = 5                                             # Número de formigas, duas por cidade
 
 # ================================
