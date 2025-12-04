@@ -127,7 +127,6 @@ class Cabo():
         RCA_ohm = comprimento_m * self.RCA /1000
         # print(f"RCA_ohm: {RCA_ohm}")
         return RCA_ohm
-        ...
 
     def _corrente_A(self, potencia_MW, FP, FC=1):
         return ((potencia_MW * 1000) / (34.5 * math.sqrt(3) * FP)) * FC
@@ -150,7 +149,7 @@ class Cabo():
         return np.round(resultado,4)
         ...
 
-# NOVOS MÉTODOS VECTORIZADOS
+
     def array_calcular_perdas_percent(self, comprimentos_array, potencias_array, potencia_total_MW, FP, FC=1):
         """
         Calcula perdas para arrays de comprimentos e potências.

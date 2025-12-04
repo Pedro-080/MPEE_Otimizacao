@@ -43,7 +43,22 @@ print("\n=== CRIANDO CIRCUITOS ===")
 
 
 
+def print_matrix3d(matrix_3d,condutores=[]):
+    # num_linhas =  matrix_3d.shape[0]
+    # num_colunas =  matrix_3d.shape[1]
+    num_layers = matrix_3d.shape[2]
 
+    # print(f"num_layers: {num_layers}")
+    # print(f"num_linhas: {num_linhas}")
+    # print(f"num_colunas: {num_colunas}")
+
+    for layer in range(num_layers):
+        if condutores != []:
+            print(f'Condutor: {condutores[layer]}')
+        else:
+            print(f'index {layer}')
+        np.set_printoptions(precision=4, floatmode='fixed')
+        print(matrix_3d[:,:,layer])
 
 
 
@@ -107,8 +122,8 @@ if __name__ == "__main__":
 
 
     perdas_test = Circuito_01.perdas
-    Circuito_01.exibir_matriz3d(perdas_test)
-
+    # Circuito_01.exibir_matriz3d(perdas_test)
+    print_matrix3d(perdas_test)
 
     # print(Circuito_01.CONDUTORES[0])
 
