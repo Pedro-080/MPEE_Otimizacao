@@ -1,80 +1,57 @@
-class ConfiguracaoBase:
-    """Classe base com configurações globais que podem ser ajustadas uma vez."""
-    
-    # Configurações padrão
-    TAXA_JUROS = 0.05      # 5%
-    MOEDA = "R$"
-    LIMITE_GLOBAL = 10000
-    PAIS = "Brasil"
-    
-    @classmethod
-    def configurar_sistema(cls, **kwargs):
-        """Configura os parâmetros globais do sistema UMA ÚNICA VEZ."""
-        for chave, valor in kwargs.items():
-            if hasattr(cls, chave.upper()):
-                setattr(cls, chave.upper(), valor)
-                print(f"Configuração '{chave}' definida como: {valor}")
-            else:
-                print(f"⚠️ Configuração '{chave}' não existe!")
+import numpy as np
+import pandas as pd
 
-class ContaBancaria(ConfiguracaoBase):
-    """Classe principal que herda as configurações."""
+def array_3d_to_dataframe_com_nomes(arr, condutores, nomes_colunas=None):
+    """
+    Versão que permite especificar nomes para cada coluna de valores.
     
-    def __init__(self, titular, saldo_inicial=0):
-        self.titular = titular
-        self.saldo = saldo_inicial
-        self.numero_conta = self._gerar_numero_conta()
+    Args:
+        arr: array 3D shape (n_condutores, n_linhas, n_colunas)
+        condutores: lista de nomes dos condutores
+        nomes_colunas: lista de nomes para as colunas de valores
     
-    # Atributo de classe para controle de contas
-    _proximo_numero = 1000
+    Returns:
+        DataFrame com colunas nomeadas
+    """
+    n_condutores, n_linhas, n_colunas = arr.shape
     
-    @classmethod
-    def _gerar_numero_conta(cls):
-        numero = cls._proximo_numero
-        cls._proximo_numero += 1
-        return numero
+    # Verificar consistência
+    if len(condutores) != n_condutores:
+        raise ValueError(f"Array tem {n_condutores} condutores, mas foram fornecidos {len(condutores)} nomes")
     
-    def aplicar_juros(self):
-        """Aplica juros usando a taxa configurada na classe base."""
-        juros = self.saldo * self.TAXA_JUROS  # Herdado!
-        self.saldo += juros
-        print(f"{self.titular}: Juros de {self.MOEDA}{juros:.2f} aplicados ({self.TAXA_JUROS*100:.1f}%)")
+    # Se nomes_colunas não for fornecido, criar padrão
+    if nomes_colunas is None:
+        nomes_colunas = [f'col_{i}' for i in range(n_colunas)]
+    elif len(nomes_colunas) != n_colunas:
+        raise ValueError(f"Array tem {n_colunas} colunas, mas foram fornecidos {len(nomes_colunas)} nomes")
     
-    def depositar(self, valor):
-        self.saldo += valor
-        return f"Depósito de {self.MOEDA}{valor:.2f} realizado."
+    # Achatar o array
+    dados_flat = arr.reshape(-1, n_colunas)
     
-    def __str__(self):
-        return (f"Conta {self.numero_conta} | {self.titular} | "
-                f"Saldo: {self.MOEDA}{self.saldo:.2f} | "
-                f"País: {self.PAIS}")
+    # Criar nomes de condutores repetidos
+    condutores_repetidos = np.repeat(condutores, n_linhas)
+    
+    # Criar DataFrame
+    df = pd.DataFrame(dados_flat, columns=nomes_colunas)
+    df.insert(0, 'condutor', condutores_repetidos)
+    
+    return df
 
-# ============ USO ============
+# Exemplo com nomes personalizados:
+print("=" * 60)
+print("EXEMPLO COM NOMES PERSONALIZADOS")
+print("=" * 60)
 
-# 1. CONFIGURAÇÃO ÚNICA ANTES DE CRIAR CONTAS
-print("=== CONFIGURANDO SISTEMA ===")
-ContaBancaria.configurar_sistema(
-    taxa_juros=0.08,      # 8%
-    moeda="US$",
-    limite_global=50000,
-    pais="Portugal"
-)
+arr_teste = np.array([
+    [[0.01, 0.02, 0.03], [0.04, 0.05, 0.06], [0.07, 0.08, 0.09]],  # OXLIP
+    [[0.10, 0.11, 0.12], [0.13, 0.14, 0.15], [0.16, 0.17, 0.18]],  # ORCHID
+    [[0.19, 0.20, 0.21], [0.22, 0.23, 0.24], [0.25, 0.26, 0.27]]   # MARIGOLD
+])
 
-print("\n=== CRIANDO CONTAS ===")
-# 2. AGORA CRIAMOS AS CONTAS
-conta1 = ContaBancaria("Ana Silva", 1500)
-conta2 = ContaBancaria("Bruno Costa", 3000)
-conta3 = ContaBancaria("Carla Santos", 500)
+condutores = ['OXLIP', 'ORCHID', 'MARIGOLD']
+nomes_colunas = ['perda_min', 'perda_media', 'perda_max']
 
-print(conta1)
-print(conta2)
-print(conta3)
-
-print("\n=== APLICANDO JUROS ===")
-conta1.aplicar_juros()
-conta2.aplicar_juros()
-
-# Tenta mudar configuração depois (não deve afetar contas existentes)
-print("\n=== TENTANDO MUDAR CONFIGURAÇÃO TARDE ===")
-ContaBancaria.TAXA_JUROS = 0.10  # 10%
-conta3.aplicar_juros()  # Vai usar 10% agora!
+df_personalizado = array_3d_to_dataframe_com_nomes(arr_teste, condutores, nomes_colunas)
+print(f"Array shape: {arr_teste.shape}")
+print(f"DataFrame shape: {df_personalizado.shape}")
+print(df_personalizado)

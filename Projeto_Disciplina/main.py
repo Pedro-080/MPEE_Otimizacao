@@ -1,12 +1,23 @@
 # 1. CONFIGURAÇÃO ÚNICA ANTES DE CRIAR CONTAS
 # flake8: noqa
-from classes import Configurar, Circuito
+from classes import Configurar, Circuito, Cabo
 import numpy as np
 import pandas as pd
 
 
 
-condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
+# CABOS CADASTRADOS (INICIALIZADOS)
+OXLIP      = Cabo('OXLIP','CA Oxlip 4/0 AWG'          ,  295.7, 0.3281, 0.4025,  430)
+GOLDENTUFT = Cabo('GOLDENTUFT','CA Goldentuft 450 MCM',  628.7, 0.1549, 0.3700,  692)
+COSMOS     = Cabo('COSMOS','CA Cosmos 477 MCM'        ,  665.9, 0.1460, 0.3678,  718)
+ORCHID     = Cabo('ORCHID','CA Orchid 636 MCM'        ,  888.4, 0.1100, 0.3557,  859)
+ARBUTUS    = Cabo('ARBUTUS','CA Arbutus 795 MCM'      , 1111.1, 0.0882, 0.3472,  988)
+ANEMONE    = Cabo('ANEMONE','CA Anemone 874,5 MCM'    , 1221.7, 0.0808, 0.3437, 1045)
+MAGNOLIA   = Cabo('MAGNOLIA','CA Magnolia 954 MCM'    , 1333.0, 0.0746, 0.3404, 1100)
+MARIGOLD   = Cabo('MARIGOLD','CA Marigold 1113 MCM'   , 1555.8, 0.0640, 0.3340, 1212)
+
+
+condutores = [OXLIP, ORCHID,  MARIGOLD]
 
 print("=== CONFIGURANDO SISTEMA ===")
 Circuito.Setup_projeto(
@@ -14,7 +25,7 @@ Circuito.Setup_projeto(
     FP           = 0.95,               # Fator de potencia 
     FC           = 1,                  # Fator de capacidade considerado. 1 = 100%
     perda_maxima_percent = 2,
-    condutores = ['OXLIP', 'ORCHID',  'MARIGOLD'],
+    condutores = condutores,
     q   = 1e5,         # fator de multiplicação do ganho de feromonio delta_tau
     rho = 0.6,         # Evaporação do feromônio
     fer = 0.1,         # Feromônio inicial
@@ -46,7 +57,15 @@ def iniciar_circuito_01():
     [    0,    0,    0,    0,    0]
     ])
 
-    Circuito_01 = Circuito("SDP-01-01", comprimento)
+    agrupamento = np.array([
+        [    0,    1,    0,    0,    0],
+        [    0,    0,    2,    0,    0],
+        [    0,    0,    0,    3,    0],
+        [    0,    0,    0,    0,    3],
+        [    0,    0,    0,    0,    0]
+    ])
+
+    Circuito_01 = Circuito("SDP-01-01", comprimento,agrupamento)
 
     return Circuito_01
 
@@ -78,11 +97,21 @@ if __name__ == "__main__":
     Circuito_02 = iniciar_circuito_02()
 
 
-    print(Circuito_01)
-    print(Circuito_02)
-    print("\n")
+    # print(Circuito_01)
+    # print(Circuito_02)
+    # print("\n")
 
     # Circuito_02.exibir_matriz_2d("agrupamento")
     Circuito_01.exibir_comprimento()
     Circuito_02.exibir_agrupamento()
+
+
+    perdas_test = Circuito_01.perdas
+    Circuito_01.exibir_matriz3d(perdas_test)
+
+
+    # print(Circuito_01.CONDUTORES[0])
+
+    # print(Circuito_02.calcular_pesos())
+
     # print(Circuito_01.comprimento)
