@@ -23,14 +23,11 @@ def Remover_elemento(lista_cidades,cidade):
     
     return array_modificado
 
-def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list):
-
+def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list,cidade_atual):
 
     Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
     Cidades_disponiveis_index = Cidades_disponiveis_index[Cidades_disponiveis_index != 0]
     Cidades_disponiveis_index = np.subtract(Cidades_disponiveis_index, 1)
-
-
 
     range_cidades = [x for x in range(0,num_cidades)]
     Cidades_disponiveis_index = Cidades_disponiveis_index.tolist()
@@ -43,18 +40,98 @@ def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers
         else:
             lista_cidades.append(0)
 
-
-
-    # #Cria a base que será usada 
-    base = np.zeros((self.NCidades,self.NCidades),dtype=int)
-    base[self.cidade_atual-1] = lista_cidades
+    base = np.zeros((num_cidades,num_cidades),dtype=int)
+    base[cidade_atual-1] = lista_cidades
     
     matriz = np.stack([base]*7,axis=2)
 
+    # Modificação: criar matriz 3D com cada camada multiplicada pelo respectivo valor
     matriz = base[:, :, np.newaxis] * Layers_disponiveis_list[np.newaxis, np.newaxis, :]
 
+    # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
+    # print_matrix3d(matriz)
+    # # print(matriz)
+    # print('*'*50)
     return matriz
 
+def criar_roleta_3d(probabilidade,Debug_Roleta = False):
+    """
+    Cria uma roleta para uma matriz 3D de probabilidades
+    Retorna uma lista de intervalos onde cada elemento tem sua faixa proporcional à probabilidade
+    
+    Args:
+        matriz_3d: array numpy 3D onde a soma de todos os elementos é 1
+    
+    Returns:
+        Lista de tuplas (inicio, fim, coordenadas, indice_original)
+    """
+    # Achatar a matriz para 1D mantendo as coordenadas originais
+    probabilidades_flat = probabilidade.flatten()
+    
+    # Gerar coordenadas para cada elemento
+    coordenadas = []
+    shape = probabilidade.shape
+    for idx in np.ndindex(shape):
+        coordenadas.append(idx)
+    
+    # Converter para porcentagem
+    probabilidades_porcentagem = probabilidades_flat * 100
+    
+    # Combinar coordenadas com probabilidades
+    elementos_completos = list(zip(coordenadas, probabilidades_porcentagem))
+    
+    # Ordenar por probabilidade (do menor para o maior)
+    elementos_ordenados = sorted(elementos_completos, key=lambda x: x[1])
+    
+    # Criar intervalos
+    intervalos = []
+    inicio = 0
+    indice = 0
+    
+    # print(f"Matriz 3D shape: {shape}")
+    # print(f"Total de elementos: {len(elementos_ordenados)}")
+    # print("\nIntervalos da roleta:")
+    
+    for coordenada, probabilidade in elementos_ordenados:
+        if probabilidade > 0:  # Ignorar elementos com probabilidade zero
+            fim = inicio + probabilidade
+            intervalos.append((inicio, fim, coordenada, indice))
+            coordenada_print = tuple(x + 1 for x in coordenada)
+            if Debug_Roleta:
+                # print('============ ROLETA ============')
+                print(f"Elemento {indice+1} (coord {coordenada_print}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
+            inicio = fim
+            indice += 1
+    
+    # print(f"Soma total dos intervalos: {inicio:.4f}%")
+    return intervalos
+
+def girar_roleta(intervalos,Debug_Roleta = False):
+    """
+    Gira a roleta e retorna as coordenadas do elemento sorteado
+    
+    Args:
+        intervalos: lista de intervalos retornada por criar_roleta_3d
+    
+    Returns:
+        Tupla com coordenadas (i, j, k) do elemento sorteado
+    """
+    if not intervalos:
+        raise ValueError("Lista de intervalos vazia")
+    
+    valor_aleatorio = random.uniform(0, 100)
+
+    if Debug_Roleta:
+        print(f"Valor sorteado: {valor_aleatorio:.4f}")
+    
+    for inicio, fim, coordenada, indice in intervalos:
+        if inicio <= valor_aleatorio < fim:
+            cidade_escolhida = coordenada[1]
+            layer_escolhida = coordenada[2]
+            return cidade_escolhida,layer_escolhida
+    
+    # Caso raro: valor exatamente no limite superior
+    return intervalos[-1][2]
 
 
 
@@ -125,9 +202,10 @@ class Circuito(Configurar):
         self.custos = self.calcular_custos()
         self.n = self.calcular_n(self.custos)
 
+        self.delta_tau = np.zeros((self.NCidades, self.NCidades, self.NCabos))
 
-        # Matriz_cidades = np.zeros((self.num_formigas, len(colunas.tolist())),dtype = int)
-
+        self.Matriz_layer = None
+        self.Matriz_cidades = None
 
     def __str__(self):
         return (f"Circuito {self.identificação} ")
@@ -246,7 +324,7 @@ class Circuito(Configurar):
         '''
         Variaveis de debug
         '''
-        Debug_Roleta     = False      #True para exibir, False para não exibir
+        Debug_Roleta     = True      #True para exibir, False para não exibir
         Debug_tau        = False      #True para exibir, False para não exibir
         Debug_formiga    = False      #True para exibir, False para não exibir
         Debug_layers     = False      #True para exibir, False para não exibir
@@ -256,7 +334,7 @@ class Circuito(Configurar):
 
         print(f"iterando sobre o circuito {self.identificação}")
 
-
+        NCidades = self.NCidades
         NCabos = self.NCabos
 
         num_formigas = self.num_formigas
@@ -276,6 +354,8 @@ class Circuito(Configurar):
         Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))
         Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1)) 
 
+        
+
         for passo in range(1, num_passos+1):
             # print(f"passo atual:{passo}")
 
@@ -294,9 +374,12 @@ class Circuito(Configurar):
                 else:
                     cidade_atual =  Matriz_cidades[formiga, passo-1]
 
+            print(f"cidades disponíveis:")
 
             Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
             
+
+
             #Remove os cabos inferiores aos já escolhidos
             Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
@@ -306,6 +389,29 @@ class Circuito(Configurar):
 
 
             matriz = self.tau ** self.ALFA * self.n ** self.BETA
+
+            mascara_cidades_disponiveis = calcular_mascara_cidades_disponiveis(Cidades_disponiveis[formiga],NCidades, Layers_disponiveis_list, cabo_atual)
+
+            numerador = matriz * mascara_cidades_disponiveis
+            denominador = np.sum(numerador)
+
+            #Calcula a probabilidade das proximas cidades
+            probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
+
+            intervalos = criar_roleta_3d(probabilidade, Debug_Roleta)
+            proxima_cidade, proximo_cabo = girar_roleta(intervalos, Debug_Roleta)
+            proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
+            proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
+
+            Matriz_layer[formiga, passo] = proximo_cabo
+            Matriz_cidades[formiga, passo] = proxima_cidade
+
+            cabo_atual = proximo_cabo
+
+        self.Matriz_layer = Matriz_layer
+        self.Matriz_cidades = Matriz_cidades
+
+        return None
 
 class Cabo():
     def __init__(self, ID,condutor, peso_kgkm, RCA, XL,ampacidade):

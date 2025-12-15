@@ -322,7 +322,7 @@ if __name__ == "__main__":
 
     
 
-    print(f"numero de passos {Circuito_01.num_passos}")
+    # print(f"numero de passos {Circuito_01.num_passos}")
 
     # Circuito_01.exibir_comprimento()
     # Circuito_01.exibir_agrupamento()
@@ -330,16 +330,21 @@ if __name__ == "__main__":
 
     perdas_test = Circuito_01.perdas
 
-    print(f"numero de iteracoes: {Circuito.ITERACOES}")
+    # print(f"numero de iteracoes: {Circuito.ITERACOES}")
 
 
     pesos_test = Circuito_01.pesos
 
 
-    display_matrix3d_compact(pesos_test,condutores,"Pesos")
+    # display_matrix3d_compact(pesos_test,condutores,"Pesos")
 
-    Custos = Circuito_01.calcular_custos()
-    display_matrix3d_compact(Custos,condutores,"Custos")
+    # Custos = Circuito_01.calcular_custos()
+    # display_matrix3d_compact(Custos,condutores,"Custos")
+
+
+    Circuito_01.iterar_circuito()
+
+
 
     # print(f"teste: {Circuito.CONDUTORES}")
 

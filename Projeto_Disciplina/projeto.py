@@ -505,7 +505,7 @@ for iteracao in range(1,iteracoes+1):
     FuncPerdas_percent = np.zeros((num_formigas,1))
 
 
-
+    
 
     for formiga in range(num_formigas):
         # print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")

@@ -1,6 +1,7 @@
 # flake8: noqa
 from cabos import OXLIP, GOLDENTUFT, COSMOS, ORCHID, ARBUTUS , ANEMONE, MAGNOLIA, MARIGOLD
 import numpy as np
+import pandas as pd
 import random
 
 
@@ -124,8 +125,6 @@ def print_matrix3d_percent(matrix_3d,condutores=[]):
         # arr_str = np.where(arr == 0, '-', arr.astype(str))
         
         print(matrix_3d[:,:,layer]/soma_matrix_3d)
-
-
 
 def calcular_n(matriz):
     """
@@ -282,6 +281,15 @@ Custo_ton_Al = 15000                                      # Custo por tonelada d
 Preco_MHh = 386.41                                        # Preço da energia por MWh.        386.51 = 386.51 r$/kWh
 
 
+# # Criar um DataFrame básico
+# data = {
+#     'Nome': ['Ana', 'João', 'Maria', 'Pedro'],
+#     'Idade': [25, 30, 22, 35],
+#     'Cidade': ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Porto Alegre']
+# }
+
+# df = pd.DataFrame(data)
+# print(df)
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
@@ -303,7 +311,7 @@ Debug_Roleta     = False      #True para exibir, False para não exibir
 Debug_tau        = False      #True para exibir, False para não exibir
 Debug_formiga    = False      #True para exibir, False para não exibir
 Debug_layers     = False      #True para exibir, False para não exibir
-Debug_delta_tau  = False
+Debug_delta_tau  = False      #True para exibir, False para não exibir
 
 
 condutores = ['OXLIP', 'ORCHID',  'MARIGOLD']
@@ -408,6 +416,7 @@ melhor_resultado = [ np.inf , [] , [], np.inf]  #massa total, layers percorridos
 top_resultados = np.zeros((10,4))       # [[vertices], [condutores],[preco_rateado],[preco_final]
 
 # print(f"top results: {top_10_resultados}")
+contador_parada = 0
 
 for iteracao in range(1,iteracoes+1):
     print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
@@ -498,9 +507,8 @@ for iteracao in range(1,iteracoes+1):
 
     
 
-
     for formiga in range(num_formigas):
-        print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")
+        # print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")
 
         caminhos   = Matriz_cidades[formiga]
         layers     = Matriz_layer[formiga]
@@ -554,7 +562,7 @@ for iteracao in range(1,iteracoes+1):
         
         FuncCusto[:, -1] = np.sum(FuncCusto[:, :-1], axis=1)     # Define a ultima coluna como a soma das colunas anteriores
 
-        print(f"custo total aqui: {FuncCusto[formiga, -1]}")
+        # print(f"custo total aqui: {FuncCusto[formiga, -1]}")
 
         # print(f"total em Al :{Massa_total_Al:.4f} ton")
         # print(f"Custo em Al da formiga :[{formiga:02d}]: {Custo_em_Al:.4f}")
@@ -579,9 +587,17 @@ for iteracao in range(1,iteracoes+1):
 
     #massa total, layers percorridos, caminho percorrido, perda total
 
+    
+    print(f"contador_parada: {contador_parada}")
 
     if novo_melhor_resultado[0] < melhor_resultado[0]:
         melhor_resultado = novo_melhor_resultado
+    else:
+        contador_parada+=1
+
+    if contador_parada >= iteracoes * 0.6:
+        print(f"Convergiu em {iteracao} iterações!")
+        break
 
     # teste = tau + delta_tau
 
