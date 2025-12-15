@@ -2,7 +2,70 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 import numpy as np
-import math 
+import math
+import random
+
+#funcoes auxiliares
+
+def Remover_elemento(lista_cidades,cidade):
+    """
+    Remove uma cidade (substitui por 0) em um array NumPy
+    """
+    array_modificado = lista_cidades.copy()
+    
+    if cidade in array_modificado:
+        # Encontrar o primeiro índice onde a cidade aparece
+        indices = np.where(array_modificado == cidade)[0]
+        if len(indices) > 0:
+            array_modificado[indices[0]] = 0
+    else:
+        print("Cidade não disponível")
+    
+    return array_modificado
+
+def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list):
+
+
+    Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
+    Cidades_disponiveis_index = Cidades_disponiveis_index[Cidades_disponiveis_index != 0]
+    Cidades_disponiveis_index = np.subtract(Cidades_disponiveis_index, 1)
+
+
+
+    range_cidades = [x for x in range(0,num_cidades)]
+    Cidades_disponiveis_index = Cidades_disponiveis_index.tolist()
+
+    lista_cidades = []
+
+    for cidade in range_cidades:
+        if cidade in Cidades_disponiveis_index:
+            lista_cidades.append(1)
+        else:
+            lista_cidades.append(0)
+
+
+
+    # #Cria a base que será usada 
+    base = np.zeros((self.NCidades,self.NCidades),dtype=int)
+    base[self.cidade_atual-1] = lista_cidades
+    
+    matriz = np.stack([base]*7,axis=2)
+
+    matriz = base[:, :, np.newaxis] * Layers_disponiveis_list[np.newaxis, np.newaxis, :]
+
+    return matriz
+
+
+
+
+
+
+
+
+
+
+
+
 class Configurar:
     """Classe base com configurações globais que podem ser ajustadas uma vez."""
     
@@ -19,7 +82,12 @@ class Configurar:
     ALFA = 1,          # Parâmetro de influência de feromônio, inicial
     BETA = 5,          # Parâmetro de influência de distância
     ITERACOES = 50,    # Número de iterações
-    NUM_FORMIGAS = 5   # Número de formigas, duas por cidade
+    Custo_ton_Al = 15000                                      # Custo por tonelada de aluminio. 15000 = 15000   R$/ton
+    Preco_MHh = 386.41                                        # Preço da energia por MWh.        386.51 = 386.51 r$/kWh
+
+    # NUM_FORMIGAS = 5   # Número de formigas, duas por cidade
+
+    
 
 
     @classmethod
@@ -34,6 +102,8 @@ class Configurar:
 
 
 
+
+
 class Circuito(Configurar):
     """Classe principal que herda as configurações."""
 
@@ -43,10 +113,44 @@ class Circuito(Configurar):
         self.comprimento = comprimento     #Matriz de inicialização das distancias
         self.agrupamento = agrupamento     #Matriz de inicialização dos agrupamentos
         self.perdas = self.calcular_perdas()
+        self.pesos = self.calcular_pesos()
+        self.num_passos = np.count_nonzero(comprimento)
+        self.num_formigas = self.num_passos
+        self.Matriz_layer = np.zeros((self.num_formigas, self.num_passos),dtype = int)
+        self.NCidades = self.comprimento.shape[0]
+        self.NCabos   = self.pesos.shape[2]
+        self.tau = np.ones((self.NCidades, self.NCidades,self.NCabos)) * self.FER         # Deposição inicial de feromonio
+        self.Pot_circ_MW = np.max(agrupamento) * self.POT_AERO_MW
+        
+        self.custos = self.calcular_custos()
+        self.n = self.calcular_n(self.custos)
+
+
+        # Matriz_cidades = np.zeros((self.num_formigas, len(colunas.tolist())),dtype = int)
 
 
     def __str__(self):
         return (f"Circuito {self.identificação} ")
+
+    def calcular_n(self, matriz):
+        """
+        Calcula o inverso da matriz de entrada.
+        
+        Args:
+            input: matriz de entrada
+            
+        Returns:
+            massa: array com massa de cada trecho
+        """   
+
+        mascara = (matriz == 0).astype(int)
+
+        K = matriz + mascara
+        m1 = K**(-1)
+        n = m1 - mascara
+
+        return n
+
 
     def exibir_comprimento(self):
         dados = self.comprimento
@@ -61,6 +165,7 @@ class Circuito(Configurar):
             df = pd.DataFrame(dados, columns = nome_colunas, index = range(1,len(dados)+1))
             print(f"Comprimento do {self.identificação}:")
             print(df)
+
 
     def exibir_agrupamento(self):
         dados = self.agrupamento
@@ -95,7 +200,7 @@ class Circuito(Configurar):
         ...
 
     def calcular_perdas(self):
-        print(f"tipo self.agrupamento:\n{self.agrupamento}")
+        # print(f"tipo self.agrupamento:\n{self.agrupamento}")
 
         Pot_acumulado_MW_3d = self.agrupamento * self.POT_AERO_MW
         Pot_circ_MW  = np.max(self.agrupamento) * self.POT_AERO_MW
@@ -110,6 +215,97 @@ class Circuito(Configurar):
 
         perdas = np.stack(perdas_por_condutor, axis=2)
         return perdas
+
+    def calcular_pesos(self):
+        
+        peso_por_condutor = []
+        
+        for condutor in self.CONDUTORES:
+            peso = condutor.array_calcular_massa_ton(self.comprimento)
+            peso_por_condutor.append(peso)
+            
+        pesos = np.stack(peso_por_condutor, axis=2)
+        return pesos
+    
+    def calcular_custos(self):
+        Custo_ton_Al = self.Custo_ton_Al
+        Pot_circ_MWh_ano = self.Pot_circ_MW * 24 * 365
+        FC = self.FC
+        Preco_MHh = self.Preco_MHh
+
+        '''O custo está sendo calculado usando apenas o preço do aluminio'''
+        Custo_peso_cabos = self.pesos * Custo_ton_Al
+        Custo_perdas     = self.perdas/100 * Pot_circ_MWh_ano * FC * Preco_MHh
+
+        Custo = Custo_peso_cabos #+ Custo_perdas
+        
+        return Custo
+        ...
+
+    def iterar_circuito(self):
+        '''
+        Variaveis de debug
+        '''
+        Debug_Roleta     = False      #True para exibir, False para não exibir
+        Debug_tau        = False      #True para exibir, False para não exibir
+        Debug_formiga    = False      #True para exibir, False para não exibir
+        Debug_layers     = False      #True para exibir, False para não exibir
+        Debug_delta_tau  = False      #True para exibir, False para não exibir
+
+
+
+        print(f"iterando sobre o circuito {self.identificação}")
+
+
+        NCabos = self.NCabos
+
+        num_formigas = self.num_formigas
+        num_passos = self.num_passos
+        
+
+        linhas, colunas = np.where(self.comprimento != 0)               #Extrai as cidades, duplicando a que possuem multiplos caminhos
+        colunas = np.add(colunas,1)                                #Adiciona 1 ao índice de todas as cidades, evitando começar em 0
+        colunas = np.insert(colunas,0,1)                           #Adiciona a primeira cidade como 1
+
+        N_cidades_totais = len(colunas.tolist())                                           #Conta o numero de cidades mesmo que duplicadas
+        Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))  
+
+        Matriz_layer = np.zeros((self.num_formigas, N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
+        Matriz_cidades = np.zeros((num_formigas, len(colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
+        
+        Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))
+        Cidades_disponiveis = np.tile(sorted(colunas.tolist()),(num_formigas,1)) 
+
+        for passo in range(1, num_passos+1):
+            # print(f"passo atual:{passo}")
+
+            for formiga in range(num_formigas):
+                if Debug_formiga:
+                    print('='*20 +"formiga: ["+ str(formiga) + "] - passo [" + str(passo) +"]" +'='*20)
+
+                if passo == 1:
+                    cidade_atual = 1
+                    # Inicia todas as formigas em layers aleatorias
+                    Matriz_layer[formiga, 0] = random.choice(Layers_disponiveis[formiga])
+                    Matriz_cidades[formiga, passo-1] = cidade_atual
+
+                    # Define o cabo atual
+                    cabo_atual = int(Matriz_layer[formiga, 0])
+                else:
+                    cidade_atual =  Matriz_cidades[formiga, passo-1]
+
+
+            Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
+            
+            #Remove os cabos inferiores aos já escolhidos
+            Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+
+            Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
+
+
+
+
+            matriz = self.tau ** self.ALFA * self.n ** self.BETA
 
 class Cabo():
     def __init__(self, ID,condutor, peso_kgkm, RCA, XL,ampacidade):
