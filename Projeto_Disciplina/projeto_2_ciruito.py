@@ -471,13 +471,13 @@ Preco_MHh = 386.41                                        # Preço da energia po
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-q = 1e4     #fator de multiplicação do ganho de feromonio delta_tau
+q = 1e5     #fator de multiplicação do ganho de feromonio delta_tau
 rho = 0.5   # Evaporação do feromônio
 fer = 0.0001   # Feromônio inicial
 fer_max = 1
 
 alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 4       # Parâmetro de influência de distância
+beta = 2       # Parâmetro de influência de distância
 
 iteracoes = 200                                                # Número de iterações
 num_formigas = 5                                             # Número de formigas, duas por cidade
@@ -487,7 +487,7 @@ Fator_de_custo = 0.05 * 1
 
 #ajuste fino de função escalonada
 A_ajuste = 1    #controla o incremento vertical A(e^(bx)-1)
-B_ajuste = 10    #controla o incremento exponencial
+B_ajuste = 8    #controla o incremento exponencial
 
 
 
@@ -894,8 +894,8 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
 
             if Perdas_totais_percent > perda_maxima_percent:
                 '''A função A(e^(B*x)-1) acrescenta um incremento exponencial para valores maiores que a perda maxima adimissivel'''
-                C1_FuncCusto[formiga, 1] = C1_Custo_em_Al + C1_Custo_perdas * A_ajuste*(np.exp(B_ajuste*(Perdas_totais_percent-perda_maxima_percent)-1))
-                C2_FuncCusto[formiga, 1] = C2_Custo_em_Al + C2_Custo_perdas * A_ajuste*(np.exp(B_ajuste*(Perdas_totais_percent-perda_maxima_percent)-1))
+                C1_FuncCusto[formiga, 1] =  C1_Custo_perdas * A_ajuste*(np.exp(B_ajuste*(Perdas_totais_percent-perda_maxima_percent)-1))
+                C2_FuncCusto[formiga, 1] =  C2_Custo_perdas * A_ajuste*(np.exp(B_ajuste*(Perdas_totais_percent-perda_maxima_percent)-1))
                 Geral_FuncCusto[formiga, 1] = C1_FuncCusto[formiga, 1] + C2_FuncCusto[formiga, 1]
 
             else:
