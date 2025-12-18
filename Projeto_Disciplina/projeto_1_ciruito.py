@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import random
 import sys
+import matplotlib.pyplot as plt
+import heapq
 
 def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list):
 
@@ -243,41 +245,6 @@ def matriz_caminho_3d(caminho, layers, Nlayers):
     return matriz_3d
 
 
-# ================================
-# INFORMAÇÃO DOS CIRCUITOS
-# ================================
-'''Matriz com a distancia entre cada vértice'''
-# Ainda é preciso tratar o codigo para permitir matrizes não padroes
-comprimento_c1 = np.array([
-    [ 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-])
-
-'''Matriz com agrupamento_c1 entre cada vértice'''
-agrupamento_c1 = np.array([
-    [ 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0],
-    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-])
-
 def display_matrix3d_compact(matrix_3d, condutores=None, titulo = None,n_samples=5, start_index=1, zero_as_dash=True):
     """
     Exibe amostra do array 3D de forma compacta.
@@ -342,7 +309,152 @@ def display_matrix3d_compact(matrix_3d, condutores=None, titulo = None,n_samples
     print("\n" + "=" * 50)
 
 
+def gerar_graficos(dados_simulacao,num_formigas,top_melhores_iteracoes,top_melhores_perdas,top_melhores_custos):
+    iteracoes = dados_simulacao[0]
 
+    lista_de_formigas = list(range(num_formigas))
+    lista_iteracoes = list(set(iteracoes))
+
+
+    perdas_por_formiga = [[] for _ in range(num_formigas)]    
+    custo_por_formiga  = [[] for _ in range(num_formigas)]    
+
+
+    for formiga in lista_de_formigas:
+        for index, formiga_atual in enumerate(dados_simulacao[1]):
+            if formiga_atual == formiga:
+                perdas_por_formiga[formiga].append(dados_simulacao[2][index])   
+                custo_por_formiga[formiga].append(dados_simulacao[4][index]) 
+
+
+    plt.figure(figsize=(12, 7))
+
+    # Plotar múltiplas séries
+    # PRIMEIRO GRÁFICO (acima)
+    plt.subplot(2, 1, 1)  # 2 linhas, 1 coluna, gráfico 1
+    plt.plot(lista_iteracoes, perdas_por_formiga[0], linestyle='-', linewidth=1, label='Formiga 0', color='blue')
+    plt.plot(lista_iteracoes, perdas_por_formiga[1], linestyle='-', linewidth=1, label='Formiga 1', color='red')
+    plt.plot(lista_iteracoes, perdas_por_formiga[2], linestyle='-', linewidth=1, label='Formiga 2', color='green')
+    plt.plot(lista_iteracoes, perdas_por_formiga[3], linestyle='-', linewidth=1, label='Formiga 3', color='orange')
+    plt.plot(lista_iteracoes, perdas_por_formiga[4], linestyle='-', linewidth=1, label='Formiga 4', color='gray')
+
+    plt.title('Evolução das Perdas por Formiga', fontsize=16, fontweight='bold')
+    plt.xlabel('Iteração', fontsize=14)
+    plt.ylabel('Perdas', fontsize=14)
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=12, loc='upper left')
+
+    plt.plot(top_melhores_iteracoes, top_melhores_perdas,
+            'ro',                    # 'r'=vermelho, 'o'=círculo, SEM '-' (sem linha)
+            markersize=6,           # Tamanho do marcador
+            markeredgecolor='black', # Cor da borda
+            markeredgewidth=1,       # Espessura da borda
+            label='Melhores pontos')
+
+
+
+
+
+    # SEGUNDO GRÁFICO (abaixo)
+    plt.subplot(2, 1, 2)  # 2 linhas, 1 coluna, gráfico 2
+    plt.plot(lista_iteracoes, custo_por_formiga[0], linestyle='-', linewidth=1, label='Formiga 0', color='blue')
+    plt.plot(lista_iteracoes, custo_por_formiga[1], linestyle='-', linewidth=1, label='Formiga 1', color='red')
+    plt.plot(lista_iteracoes, custo_por_formiga[2], linestyle='-', linewidth=1, label='Formiga 2', color='green')
+    plt.plot(lista_iteracoes, custo_por_formiga[3], linestyle='-', linewidth=1, label='Formiga 3', color='orange')
+    plt.plot(lista_iteracoes, custo_por_formiga[4], linestyle='-', linewidth=1, label='Formiga 4', color='gray')
+
+    plt.plot(top_melhores_iteracoes, top_melhores_custos,
+            'ro',                    # 'r'=vermelho, 'o'=círculo, SEM '-' (sem linha)
+            markersize=6,           # Tamanho do marcador
+            markeredgecolor='black', # Cor da borda
+            markeredgewidth=1,       # Espessura da borda
+            label='Melhores pontos')
+
+
+    plt.title('Custo por Formiga', fontsize=16, fontweight='bold')
+    plt.xlabel('Iteração', fontsize=14)
+    plt.ylabel('Custo R$', fontsize=14)
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(fontsize=12, loc='upper left')
+    # ESCALA LOGARÍTMICA NO EIXO Y
+    plt.yscale('log')
+
+
+
+
+
+    # Ajustar layout para não sobrepor
+    plt.tight_layout()
+    plt.show()
+
+def melhores_resultados(dados_simulacao, tamanho_podium=10):
+
+    dados_iteracao = dados_simulacao[0]
+    dados_formiga  = dados_simulacao[1]
+    dados_perdas   = dados_simulacao[2]
+    dados_layers   = dados_simulacao[3]
+    dados_custos   = dados_simulacao[4]
+
+
+
+    # Converter durante a ordenação
+    combinados = list(zip(dados_iteracao,dados_formiga,dados_perdas, dados_layers, dados_custos))
+    melhores = sorted(combinados, key=lambda x: float(x[4]))[:tamanho_podium]
+
+    top_melhores_iteracoes = []
+    top_melhores_perdas = []
+    top_melhores_custos = []
+
+    print(f"Os {tamanho_podium} melhores custos com suas ordens de introdução:")
+    for iteracao, formiga, perda, layers, custo in melhores:
+        top_melhores_iteracoes.append(iteracao)
+        top_melhores_perdas.append(perda)
+        top_melhores_custos.append(custo)
+        print(f"• Custo R${custo:.2f} com perda {perda:.2f}% com as layers {layers} na iteracao {iteracao} da formiga {formiga}")
+
+
+
+
+    # print(f"top_melhores_iteracoes: {top_melhores_iteracoes}")
+
+    return top_melhores_iteracoes, top_melhores_perdas, top_melhores_custos
+
+
+
+# ================================
+# INFORMAÇÃO DOS CIRCUITOS
+# ================================
+'''Matriz com a distancia entre cada vértice'''
+# Ainda é preciso tratar o codigo para permitir matrizes não padroes
+comprimento_c1 = np.array([
+    [ 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,1000.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+])
+
+'''Matriz com agrupamento_c1 entre cada vértice'''
+agrupamento_c1 = np.array([
+    [ 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0],
+    [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+])
 
 # ================================
 # DADOS DO CIRCUITO
@@ -359,15 +471,7 @@ Custo_ton_Al = 15000                                      # Custo por tonelada d
 Preco_MHh = 386.41                                        # Preço da energia por MWh.        386.51 = 386.51 r$/kWh
 
 
-# # Criar um DataFrame básico
-# data = {
-#     'Nome': ['Ana', 'João', 'Maria', 'Pedro'],
-#     'Idade': [25, 30, 22, 35],
-#     'Cidade': ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Porto Alegre']
-# }
 
-# df = pd.DataFrame(data)
-# print(df)
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
@@ -379,7 +483,7 @@ fer_max = 1
 alfa = 1      # Parâmetro de influência de feromônio, inicial
 beta = 5       # Parâmetro de influência de distância
 
-iteracoes = 100                                                # Número de iterações
+iteracoes = 500                                                # Número de iterações
 num_formigas = 5                                             # Número de formigas, duas por cidade
 
 Fator_de_custo = 0.05
@@ -395,12 +499,13 @@ B_ajuste = 10    #controla o incremento exponencial
 # PARÂMETROS DE DEBUG!!!
 # ================================
 
-Debug_Roleta     = False      #True para exibir, False para não exibir
-Debug_tau        = False      #True para exibir, False para não exibir
-Debug_formiga    = False     #True para exibir, False para não exibir
-Debug_layers     = False      #True para exibir, False para não exibir
-Debug_delta_tau  = False      #True para exibir, False para não exibir
-Debug_perdas     = False
+Debug_Roleta     = False    #True para exibir no log, as seleçoes da roleta
+Debug_tau        = False    #True para exibir no log, os passos da matriz tau
+Debug_formiga    = False    #True para exibir no log, os passos de cada formiga
+Debug_layers     = False    #True para exibir no log, os cabos selecionados em cada iteracao
+Debug_delta_tau  = False    #True para exibir no log, os passos da matriz delta_tau
+Debug_perdas     = False    #True para exibir no log, a matriz de perdas em cada iteração
+Debug_resultados = True     #True para exibir no log, todos os resultados
 
 condutores = ['OXLIP','GOLDENTUFT', 'ORCHID', 'MAGNOLIA', 'MARIGOLD']
 
@@ -439,8 +544,6 @@ perdas = np.stack([
     perdas_MARIGOLD
 ], axis=2)
 
-# print("========= Perdas =========")
-# print_matrix3d(perdas,condutores)
 
 NCidades = comprimento_c1.shape[0]
 NCabos   = pesos.shape[2]
@@ -449,23 +552,6 @@ NCabos   = pesos.shape[2]
 tau = np.ones((NCidades, NCidades,NCabos)) * fer         # Deposição inicial de feromonio
 comprimento_c1_3d = np.stack([comprimento_c1]*NCabos, axis = 2)
 
-
-
-"""
-Debug de variáveis de custo
-
-Args:
-    comprimento_c1_3d   : Matriz empilhada das distancias consideradas, distancias em metros (m).
-    pesos            : Matriz empilhada dos pesos totais calculados, pesos em toneladas (ton).
-    Custo_ton_Al     : Custo por tonelada de alumínio, em ($/ton).
-
-    perdas           : Matriz empilhada com as perdas percentuais, perdas em porcentagem (%).
-    Pot_circ_MWh_ano : Potencia total calculada para o circuito, em (MWh/ano).
-    FC               : Fator de capacidade utilizado na análise, adimensional.
-    Preco_MHh        : Preço por MHh estimado, ($/MWh)
-    Vida_util_anos   : Tempo de vida do empreendimento, em anos (ano)
-
-"""
 
 
 
@@ -478,21 +564,11 @@ Custo_perdas     = perdas/100 * Pot_circ_MWh_ano * FC * Preco_MHh * Fator_de_cus
 
 Custo = Custo_peso_cabos + Custo_perdas
 
-# display_matrix3d_compact(perdas,condutores,"Perdas")
 
-display_matrix3d_compact(Custo_peso_cabos,condutores,"Custo cabos")
-display_matrix3d_compact(Custo_perdas,condutores,"Custo perdas")
+'''Descomentar para verificar as matrizes de custo de cabos e perdas'''
+# display_matrix3d_compact(Custo_peso_cabos,condutores,"Custo cabos")
+# display_matrix3d_compact(Custo_perdas,condutores,"Custo perdas")
 
-# print(f"Pot_circ_MWh_ano: {Pot_circ_MWh_ano}")
-
-# print("=========== Custos perdas ============")
-# print_matrix3d(Custo_perdas,condutores)
-
-# print("=========== Custos cabos ============")
-# print_matrix3d(Custo_peso_cabos,condutores)
-
-# print("=========== Custos total ============")
-# print_matrix3d(Custo,condutores)
 
 
 n = calcular_n(Custo)                                        # Matriz de termos inversos a distância
@@ -505,29 +581,26 @@ colunas = np.insert(colunas,0,1)                           #Adiciona a primeira 
 N_cidades_totais = len(colunas.tolist())                                           #Conta o numero de cidades mesmo que duplicadas
 Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))  
 
-'''Versão correta - Descomentar apos testes'''
-'''É preciso alterar o codigo para permitir o uso de matrizes não padrões'''
-num_passos = np.count_nonzero(comprimento_c1)
-# print(f"num_passos pre: {num_passos}")
-# num_passos = 4
 
+num_passos = np.count_nonzero(comprimento_c1)
 
 melhor_resultado = [ np.inf , [] , [], np.inf]  #massa total, layers percorridos, caminho percorrido, perda total
 
-top_resultados = np.zeros((10,4))       # [[vertices], [condutores],[preco_rateado],[preco_final]
 
-# print(f"top results: {top_10_resultados}")
 contador_parada = 0
 
 
 # Salva a referência original do stdout (o console)
 stdout_original = sys.stdout
 
-analise_perdas = []
+analise_perdas = []   #variavel auxiliar do Debug_resultado
+
+dados_para_grafico = [[], [], [], [], []] # Matriz auxiliar para gerar graficos
+
 
 # Abre o arquivo em modo de escrita ('w'). 
 # Tudo o que for impresso a partir daqui será direcionado para ele.
-with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
+with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
     sys.stdout = arquivo_log  # Redireciona stdout para o arquivo
 
     for iteracao in range(1,iteracoes+1):
@@ -566,10 +639,8 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
 
                 Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
 
-
-
                     
-                '''Remove os cabos inferiores aos já escolhidos '''
+                '''Remove os cabos inferiores aos já escolhidos, descomentar para testar '''
                 # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
 
 
@@ -584,19 +655,10 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
                 numerador = matriz * mascara_cidades_disponiveis
                 denominador = np.sum(numerador)
 
-                # print(f"Cidades_disponiveis[formiga]: {Cidades_disponiveis[formiga]}")
-                # print_matrix3d(mascara_cidades_disponiveis,condutores)
 
                 '''Calcula a probabilidade das proximas cidades'''
                 probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
                 
-                # print('='*50)
-                # print_matrix3d(probabilidade)
-                # print('='*50)
-
-                # print(f"Layers_disponiveis[{formiga}]: {Layers_disponiveis[formiga]}")
-                # print(f"Cidade atual: {cidade_atual}")
-                # print(f"cabo_atual: {cabo_atual}")
 
                 intervalos = criar_roleta_3d(probabilidade, Debug_Roleta)
                 proxima_cidade, proximo_cabo = girar_roleta(intervalos, Debug_Roleta)
@@ -605,12 +667,6 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
 
                 Matriz_layer[formiga, passo] = proximo_cabo
                 Matriz_cidades[formiga, passo] = proxima_cidade
-
-
-                # print(f"Matriz_layer: \n{Matriz_layer}")
-                # print(f"Matriz_cidades: \n{Matriz_cidades}")
-
-                # FuncCusto[formiga, 0 ] = FuncCusto[formiga] + Custo[cidade_atual-1 , proxima_cidade-1 ,cabo_atual -1] 
 
                 cabo_atual = proximo_cabo
 
@@ -625,11 +681,7 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
         FuncCusto          = np.zeros((num_formigas,3))
         FuncPerdas_percent = np.zeros((num_formigas,1))
 
-
-
-
         for formiga in range(num_formigas):
-            # print(f"=== Matriz_layer[{formiga}] ===\n{Matriz_layer[formiga]}")
 
             caminhos   = Matriz_cidades[formiga]
             layers     = Matriz_layer[formiga]
@@ -647,99 +699,50 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
             perdas_totais_MWh      = np.sum(perdas_formiga_MWh)
             Custo_perdas  = perdas_totais_MWh * FC * Preco_MHh * Fator_de_custo
 
-            
-            print(f"Custo_perdas: r${Custo_perdas:.2f}")
-            # print(f"perdas_totais_MWh: {perdas_totais_MWh:.2f}")
-
-            # print_matrix3d(perdas_formiga_MWh,condutores)
-
-
-            # perdas_MWh_ano = perdas_totais_percent/100 * Pot_circ_MWh_ano * FC
-
             FuncPerdas_percent[formiga] = perdas_totais_percent
 
             # Custo_perdas       = perdas_formiga_MWh  * Preco_MHh * FC #* Vida_util_anos
             Custo_perdas_valor = np.sum(Custo_perdas)
 
-
-            
-
-
             if perdas_totais_percent > perda_maxima_percent:
-                # print(f"calculo de perdas: {perdas_totais_percent:.2f}-{perda_maxima_percent:.2f}={perdas_totais_percent - perda_maxima_percent}")
-                # perda_excedente_percent = (perdas_totais_percent - perda_maxima_percent)
-                '''Comentado para teste'''
-                # FuncCusto[formiga, 1] =  Custo_perdas_valor
-
-
+                '''A função A(e^(B*x)-1) acrescenta um incremento exponencial para valores maiores que a perda maxima adimissivel'''
                 FuncCusto[formiga, 1] = Custo_em_Al + Custo_perdas * A_ajuste*(np.exp(B_ajuste*(perdas_totais_percent-perda_maxima_percent)-1))
             else:
                 FuncCusto[formiga, 1] = Custo_em_Al
 
-            
-            
-
-            # print(f"Pot_circ_MW: {Pot_circ_MW}")
-            
-            # print(f"Peso em Al: {Massa_total_Al:.2f}ton - Custo Aluminio: ${Custo_em_Al:,.2f}")
-            # print(f"Perda total: {perdas_totais_percent:.2f}% - Perda total: {perdas_MWh_ano  }MWh/ano - Custo com perda: ${(Custo_perda):,.2f}")
-            # print(f"Custo total: ${np.sum(FuncCusto[formiga, :]):,.2f}")
-
-            
-            # caminho_3d = matriz_caminho_3d(caminhos, layers,NCabos)
-            # print(f"shape matriz_caminho_3d: {caminho_3d.shape}")
-            # print("matriz_caminho_3d")
-            # print_matrix3d(caminho_3d,condutores)
-            
             FuncCusto[:, -1] = np.sum(FuncCusto[:, :-1], axis=1)     # Define a ultima coluna como a soma das colunas anteriores
-
-            # print(f"custo total aqui: {FuncCusto[formiga, -1]}")
-
-            # print(f"total em Al :{Massa_total_Al:.4f} ton")
-            # print(f"Custo em Al da formiga :[{formiga:02d}]: {Custo_em_Al:.4f}")
-
-            # print_matrix3d(perdas_formiga_percent)
-            # print(f"Perdas totais: {perdas_totais}")
-
 
             if Debug_delta_tau:
                 display_matrix3d_compact(delta_tau,condutores,"delta_tau")
-
-
-
 
 
             delta_tau = delta_tau + caminho_3d  * q /(FuncCusto[formiga, -1])
 
             analise_perdas.append(f"iteracao {iteracao} - formiga {formiga} - perdas {perdas_totais_percent:.2f} - layers {layers} - Custo {FuncCusto[formiga, -1]:.2f}")
 
-            # if perdas_totais <= perda_maxima_percent:
-            #     print(f"perdas_totais: {perdas_totais}")
-            #     delta_tau = delta_tau + caminho_3d  * 1/FuncCusto[formiga]
+            dados_para_grafico[0].append(iteracao)
+            dados_para_grafico[1].append(formiga)
+            dados_para_grafico[2].append(perdas_totais_percent)
+            dados_para_grafico[3].append(layers)
+            dados_para_grafico[4].append(FuncCusto[formiga, -1])
+            
 
-        
 
         indice_menor_valor = np.argmin(FuncCusto[:,-1])
-        # print(f"indice_menor_valor: {indice_menor_valor}")
-
         novo_melhor_resultado = [ FuncCusto[indice_menor_valor].tolist()[-1] , Matriz_layer[indice_menor_valor].tolist(), Matriz_cidades[indice_menor_valor].tolist(), FuncPerdas_percent[indice_menor_valor,0]]
 
-        # print(f"novo_melhor_resultado: {FuncCusto[indice_menor_valor].tolist()[-1]}")
-        
-
-        #massa total, layers percorridos, caminho percorrido, perda total
-
-        
-        print(f"contador_parada: {contador_parada}")
 
         if novo_melhor_resultado[0] < melhor_resultado[0]:
             melhor_resultado = novo_melhor_resultado
+            contador_parada = 0
         else:
             contador_parada+=1
 
-        # if contador_parada >= iteracoes * 0.6:
-        #     print(f"Convergiu em {iteracao} iterações!")
-        #     break
+
+
+        if contador_parada >= iteracoes * 0.5:
+            print(f"Convergiu em {iteracao} iterações!")
+            break
 
         # teste = tau + delta_tau
 
@@ -752,85 +755,50 @@ with open('log_prints.txt', 'w', encoding='utf-8') as arquivo_log:
 
         if Debug_tau:
             # print('='*50)
-            # print(f"tau percent: ")
             # print_matrix3d_percent(tau,condutores)
-
             display_matrix3d_compact(tau,condutores,"Tau")
-            # print(f"tau: ")
-            # print_matrix3d(tau,condutores)
 
-            print('='*50)
-
-        if Debug_delta_tau and False:
             # print('='*50)
-            # print(f"delta_tau percent: ")
-            # print_matrix3d_percent(delta_tau,condutores)
-            # print(f"delta_tau: ")
-            # print_matrix3d(delta_tau,condutores)
+
+        if Debug_delta_tau:
             display_matrix3d_compact(delta_tau,condutores,"Delta tau")
-            # print('='*50)
 
-        # print(f"tau + delta tau :")
-        # print_matrix3d(teste)
 
         
-
-
-    # print_matrix3d(probabilidade)
-    # print(f"probabilidade total: {np.sum(probabilidade)}")
-        # print(f"Matriz_layer: \n{Matriz_layer}")
         if Debug_layers:
             print("=========== Layer percorridos ============")
             for index, layers in enumerate(Matriz_layer):
                 print(f"Formiga [{index+1:02d}]: {layers}")
 
-        print("=========== FuncCusto ============")
-        print(FuncCusto)
-
-        print("=========== FuncPerdas_percent ============")
-        print(FuncPerdas_percent)
-
-    # print(f"proxima_cidade: {proxima_cidade}")
-    # print(f"proximo_cabo: {proximo_cabo}")
-
-
-
-
-    # ================================
-    # RESULTADOS FINAIS
-    # ================================
-    # melhor_resultado[1].pop()
-    # melhor_resultado[1] = melhor_resultado[1][-1]
-
-
-
-    print('\n' + '='*50)
-    print('RESULTADO FINAL')
-    print('='*50)
-
-    print(f"O melhor resultado é: {melhor_resultado[0]:.4f}")
-    print(f"A uma perda percentual de: {melhor_resultado[3]:.2f}%")
-    print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]:}")
-    print(f"O melhor caminho é através dos vértices  : {melhor_resultado[2]}")
-
     # Ao sair do bloco 'with', o arquivo é fechado automaticamente.
     # No entanto, o sys.stdout ainda aponta para ele, então restauramos explicitamente.
 
-    print("analise_perdas")
 
-    for item in analise_perdas:
-        print(item)
+
+    if Debug_resultados:
+        print('\n' + '='*50)
+        print('RESULTADOS')
+        print('='*50)
+        for item in analise_perdas:
+            print(item)
 
     sys.stdout = stdout_original
 
+
+
+
 # Prints a partir daqui voltam a aparecer no console normalmente
-print("Esta linha aparece no console, não no arquivo.")
+
 
 print('\n' + '='*50)
 print('RESULTADO FINAL')
 print('='*50)
 
-print(f"O melhor resultado é: {melhor_resultado[0]:.4f}")
-print(f"A uma perda percentual de: {melhor_resultado[3]:.2f}%")
-print(f"O melhor caminho é através dos condutores: {melhor_resultado[1]:}")
-print(f"O melhor caminho é através dos vértices  : {melhor_resultado[2]}")
+top_melhores_iteracoes, top_melhores_perdas, top_melhores_custos =  melhores_resultados(dados_para_grafico)
+
+gerar_graficos(dados_para_grafico, 
+                num_formigas, 
+                top_melhores_iteracoes,
+                top_melhores_perdas,
+                top_melhores_custos
+                )
