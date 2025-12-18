@@ -9,23 +9,15 @@ import heapq
 
 def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers_disponiveis_list):
 
-    # print(f"Num cidades: {num_cidades}")
-    # '''Esta função não está funcionando crretamente, corrigir!!!'''
-    # Layers_disponiveis_list
 
     Cidades_disponiveis_index = np.unique(Cidades_disponiveis)
     Cidades_disponiveis_index = Cidades_disponiveis_index[Cidades_disponiveis_index != 0]
     Cidades_disponiveis_index = np.subtract(Cidades_disponiveis_index, 1)
 
-    # print(f"Cidades_disponiveis_index pre: {Cidades_disponiveis_index}")
-    # Cidades_disponiveis_index = np.insert(Cidades_disponiveis_index, 0, 0)
 
     range_cidades = [x for x in range(0,num_cidades)]
     Cidades_disponiveis_index = Cidades_disponiveis_index.tolist()
 
-
-    # print(f"Cidades_disponiveis_index: {Cidades_disponiveis_index}")
-    # print(f"range_cidades: {range_cidades}")
     lista_cidades = []
 
     for cidade in range_cidades:
@@ -34,32 +26,13 @@ def calcular_mascara_cidades_disponiveis(Cidades_disponiveis,num_cidades, Layers
         else:
             lista_cidades.append(0)
 
-
-
-
-    # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
-
-    # NCidades = len(Cidades_disponiveis_index)
-    
-    # Cidades_disponiveis_list = (Cidades_disponiveis_index != 0).astype(int)
-    # print(f"Cidades_disponiveis_index:{Cidades_disponiveis_index}")
-    # print(f"Cidades_disponiveis_lis:  {Cidades_disponiveis_list}")
-
-    # #Cria a base que será usada 
     base = np.zeros((NCidades,NCidades),dtype=int)
     base[cidade_atual-1] = lista_cidades
     
     matriz = np.stack([base]*7,axis=2)
 
-    # Modificação: criar matriz 3D com cada camada multiplicada pelo respectivo valor
     matriz = base[:, :, np.newaxis] * Layers_disponiveis_list[np.newaxis, np.newaxis, :]
 
-    # matriz = base[np.newaxis, :, :] * Layers_disponiveis_list[:, np.newaxis, np.newaxis]
-
-    # print(f"Cidades_disponiveis_list:{Cidades_disponiveis_list}")
-    # print_matrix3d(matriz)
-    # # print(matriz)
-    # print('*'*50)
     return matriz
 
 def matrix3d_fatiar_linha(linha, matrix3d):
@@ -87,13 +60,8 @@ def Remover_elemento(lista_cidades,cidade):
     return array_modificado
 
 def print_matrix3d(matrix_3d,condutores=[]):
-    # num_linhas =  matrix_3d.shape[0]
-    # num_colunas =  matrix_3d.shape[1]
-    num_layers = matrix_3d.shape[2]
 
-    # print(f"num_layers: {num_layers}")
-    # print(f"num_linhas: {num_linhas}")
-    # print(f"num_colunas: {num_colunas}")
+    num_layers = matrix_3d.shape[2]
 
     for layer in range(num_layers):
         if condutores != []:
@@ -104,16 +72,12 @@ def print_matrix3d(matrix_3d,condutores=[]):
         print(matrix_3d[:,:,layer])
 
 def print_matrix3d_percent(matrix_3d,condutores=[]):
-    # num_linhas =  matrix_3d.shape[0]
-    # num_colunas =  matrix_3d.shape[1]
+
     soma_matrix_3d = np.sum(matrix_3d)
-    # print(f"soma_matrix_3d percent: {soma_matrix_3d}")
+
 
     num_layers = matrix_3d.shape[2]
 
-    # print(f"num_layers: {num_layers}")
-    # print(f"num_linhas: {num_linhas}")
-    # print(f"num_colunas: {num_colunas}")
 
     for layer in range(num_layers):
         if condutores != []:
@@ -121,10 +85,6 @@ def print_matrix3d_percent(matrix_3d,condutores=[]):
         else:
             print(f'index {layer}')
         np.set_printoptions(precision=4, floatmode='fixed')
-
-        # valor = matrix_3d[:,:,layer]/soma_matrix_3d
-        # Substituir zeros usando np.where()
-        # arr_str = np.where(arr == 0, '-', arr.astype(str))
         
         print(matrix_3d[:,:,layer]/soma_matrix_3d)
 
@@ -181,10 +141,6 @@ def criar_roleta_3d(probabilidade,Debug_Roleta = False):
     inicio = 0
     indice = 0
     
-    # print(f"Matriz 3D shape: {shape}")
-    # print(f"Total de elementos: {len(elementos_ordenados)}")
-    # print("\nIntervalos da roleta:")
-    
     for coordenada, probabilidade in elementos_ordenados:
         if probabilidade > 0:  # Ignorar elementos com probabilidade zero
             fim = inicio + probabilidade
@@ -195,8 +151,7 @@ def criar_roleta_3d(probabilidade,Debug_Roleta = False):
                 print(f"Elemento {indice+1} (coord {coordenada_print}): [{inicio:.4f} - {fim:.4f}] ({probabilidade:.4f}%)")
             inicio = fim
             indice += 1
-    
-    # print(f"Soma total dos intervalos: {inicio:.4f}%")
+
     return intervalos
 
 def girar_roleta(intervalos,Debug_Roleta = False):
@@ -243,7 +198,6 @@ def matriz_caminho_3d(caminho, layers, Nlayers):
         matriz_3d[origem-1, destino-1, layer] = 1
     
     return matriz_3d
-
 
 def display_matrix3d_compact(matrix_3d, condutores=None, titulo = None,n_samples=5, start_index=1, zero_as_dash=True):
     """
@@ -308,7 +262,6 @@ def display_matrix3d_compact(matrix_3d, condutores=None, titulo = None,n_samples
     
     print("\n" + "=" * 50)
 
-
 def gerar_graficos(dados_simulacao,num_formigas,top_melhores_iteracoes,top_melhores_perdas,top_melhores_custos):
     iteracoes = dados_simulacao[0]
 
@@ -352,9 +305,6 @@ def gerar_graficos(dados_simulacao,num_formigas,top_melhores_iteracoes,top_melho
             label='Melhores pontos')
 
 
-
-
-
     # SEGUNDO GRÁFICO (abaixo)
     plt.subplot(2, 1, 2)  # 2 linhas, 1 coluna, gráfico 2
     plt.plot(lista_iteracoes, custo_por_formiga[0], linestyle='-', linewidth=1, label='Formiga 0', color='blue')
@@ -378,9 +328,6 @@ def gerar_graficos(dados_simulacao,num_formigas,top_melhores_iteracoes,top_melho
     plt.legend(fontsize=12, loc='upper left')
     # ESCALA LOGARÍTMICA NO EIXO Y
     plt.yscale('log')
-
-
-
 
 
     # Ajustar layout para não sobrepor
@@ -412,13 +359,7 @@ def melhores_resultados(dados_simulacao, tamanho_podium=10):
         top_melhores_custos.append(custo)
         print(f"• Custo R${custo:.2f} com perda {perda:.2f}% com as layers {layers} na iteracao {iteracao} da formiga {formiga}")
 
-
-
-
-    # print(f"top_melhores_iteracoes: {top_melhores_iteracoes}")
-
     return top_melhores_iteracoes, top_melhores_perdas, top_melhores_custos
-
 
 
 # ================================
@@ -708,7 +649,7 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
                 '''A função A(e^(B*x)-1) acrescenta um incremento exponencial para valores maiores que a perda maxima adimissivel'''
                 FuncCusto[formiga, 1] = Custo_em_Al + Custo_perdas * A_ajuste*(np.exp(B_ajuste*(perdas_totais_percent-perda_maxima_percent)-1))
             else:
-                FuncCusto[formiga, 1] = Custo_em_Al
+                FuncCusto[formiga, 1] = 0
 
             FuncCusto[:, -1] = np.sum(FuncCusto[:, :-1], axis=1)     # Define a ultima coluna como a soma das colunas anteriores
 
