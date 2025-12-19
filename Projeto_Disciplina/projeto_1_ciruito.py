@@ -169,13 +169,16 @@ def girar_roleta(intervalos,Debug_Roleta = False):
     
     valor_aleatorio = random.uniform(0, 100)
 
-    if Debug_Roleta:
-        print(f"Valor sorteado: {valor_aleatorio:.4f}")
-        print("=" * 50)
+    # if Debug_Roleta:
+    #     print(f"Valor sorteado: {valor_aleatorio:.4f}")
+    #     print("=" * 50)
     for inicio, fim, coordenada, indice in intervalos:
         if inicio <= valor_aleatorio < fim:
             cidade_escolhida = coordenada[1]
             layer_escolhida = coordenada[2]
+            if Debug_Roleta:
+                print(f"Valor sorteado: {valor_aleatorio:.4f} - layer selecionado {layer_escolhida+1}")
+                print("=" * 50)
             return cidade_escolhida,layer_escolhida
     
     # Caso raro: valor exatamente no limite superior
@@ -422,9 +425,9 @@ fer = 0.0001   # Feromônio inicial
 fer_max = 1
 
 alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 5       # Parâmetro de influência de distância
+beta = 9       # Parâmetro de influência de distância
 
-iteracoes = 500                                                # Número de iterações
+iteracoes = 100                                                # Número de iterações
 num_formigas = 5                                             # Número de formigas, duas por cidade
 
 Fator_de_custo = 0.05
@@ -432,7 +435,7 @@ Fator_de_custo = 0.05
 
 #ajuste fino de função escalonada
 A_ajuste = 1    #controla o incremento vertical A(e^(bx)-1)
-B_ajuste = 10    #controla o incremento exponencial
+B_ajuste = 2    #controla o incremento exponencial
 
 
 
@@ -444,7 +447,7 @@ Debug_Roleta     = False    #True para exibir no log, as seleçoes da roleta
 Debug_tau        = False    #True para exibir no log, os passos da matriz tau
 Debug_formiga    = False    #True para exibir no log, os passos de cada formiga
 Debug_layers     = False    #True para exibir no log, os cabos selecionados em cada iteracao
-Debug_delta_tau  = False    #True para exibir no log, os passos da matriz delta_tau
+Debug_delta_tau  = True    #True para exibir no log, os passos da matriz delta_tau
 Debug_perdas     = False    #True para exibir no log, a matriz de perdas em cada iteração
 Debug_resultados = True     #True para exibir no log, todos os resultados
 
@@ -546,7 +549,7 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
 
     for iteracao in range(1,iteracoes+1):
         print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
-        Matriz_layer = np.zeros((num_formigas, N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
+        Matriz_layer = np.zeros((num_formigas, N_cidades_totais-1),dtype = int)                     # Caminho das formigas pelos layers
         Matriz_cidades = np.zeros((num_formigas, len(colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
         
         Layers_disponiveis = np.tile(np.arange(1,NCabos+1),(num_formigas,1))
@@ -561,15 +564,15 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
                     print('='*20 +"formiga: ["+ str(formiga) + "] - passo [" + str(passo) +"]" +'='*20)
 
 
-                if passo == 1:
+                if passo == 1 :
                     cidade_atual = 1
                     # '''Inicia todas as formigas em cidades aleatorias'''
-                    Matriz_layer[formiga, 0] = random.choice(Layers_disponiveis[formiga])
+                    # Matriz_layer[formiga, 0] = random.choice(Layers_disponiveis[formiga])
                     
                     Matriz_cidades[formiga, passo-1] = cidade_atual
 
                     # '''Define a cidade atual como a cidade aleatoria sorteada'''
-                    cabo_atual = int(Matriz_layer[formiga, 0])
+                    # cabo_atual = int(Matriz_layer[formiga, 0])
 
                 # '''Executa a partir da segunda cidade'''   
                 else:
@@ -580,9 +583,10 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
 
                 Cidades_disponiveis[formiga] = Remover_elemento(Cidades_disponiveis[formiga],cidade_atual)
 
-                    
+                maior_layer_atual = max(Matriz_layer[formiga])
+
                 '''Remove os cabos inferiores aos já escolhidos, descomentar para testar '''
-                # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+                Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < maior_layer_atual, 0, Layers_disponiveis[formiga])
 
 
                 Layers_disponiveis_list = (Layers_disponiveis[formiga] != 0).astype(int)
@@ -600,13 +604,18 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
                 '''Calcula a probabilidade das proximas cidades'''
                 probabilidade = matriz * 1/denominador  * mascara_cidades_disponiveis
                 
+                # display_matrix3d_compact(probabilidade,condutores,"Probabilidade")
 
                 intervalos = criar_roleta_3d(probabilidade, Debug_Roleta)
                 proxima_cidade, proximo_cabo = girar_roleta(intervalos, Debug_Roleta)
+                # proxima_cidade, cabo_escolhido = girar_roleta(intervalos, Debug_Roleta)                
+                
                 proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
                 proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
 
-                Matriz_layer[formiga, passo] = proximo_cabo
+                Matriz_layer[formiga, passo-1] = proximo_cabo
+                print(f"Matriz_layer: {Matriz_layer[formiga,:]}")
+
                 Matriz_cidades[formiga, passo] = proxima_cidade
 
                 cabo_atual = proximo_cabo
@@ -616,7 +625,7 @@ with open('log_circuito_unico.txt', 'w', encoding='utf-8') as arquivo_log:
 
         delta_tau = np.zeros((NCidades, NCidades, NCabos))
 
-        Matriz_layer = Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!
+        # Matriz_layer = Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!
         
 
         FuncCusto          = np.zeros((num_formigas,3))
