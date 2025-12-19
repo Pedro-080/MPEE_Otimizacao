@@ -471,23 +471,23 @@ Preco_MHh = 386.41                                        # Preço da energia po
 # ================================
 # PARÂMETROS DO ALGORITMO
 # ================================
-q = 1e5     #fator de multiplicação do ganho de feromonio delta_tau
+q = 1     #fator de multiplicação do ganho de feromonio delta_tau
 rho = 0.5   # Evaporação do feromônio
 fer = 0.0001   # Feromônio inicial
 fer_max = 1
 
 alfa = 1      # Parâmetro de influência de feromônio, inicial
-beta = 2       # Parâmetro de influência de distância
+beta = 11       # Parâmetro de influência de distância
 
-iteracoes = 200                                                # Número de iterações
+iteracoes = 100                                                # Número de iterações
 num_formigas = 5                                             # Número de formigas, duas por cidade
 
-Fator_de_custo = 0.05 * 1
+Fator_de_custo = 0.05 
 
 
 #ajuste fino de função escalonada
 A_ajuste = 1    #controla o incremento vertical A(e^(bx)-1)
-B_ajuste = 8    #controla o incremento exponencial
+B_ajuste = 3    #controla o incremento exponencial
 
 
 
@@ -675,7 +675,7 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
 
     for iteracao in range(1,iteracoes+1):
         print('='*40 +"Iteração: "+ str(iteracao) + '='*40)
-        C1_Matriz_layer = np.zeros((num_formigas, C1_N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
+        C1_Matriz_layer = np.zeros((num_formigas, C1_N_cidades_totais-1),dtype = int)                     # Caminho das formigas pelos layers
         C1_Matriz_cidades = np.zeros((num_formigas, len(C1_colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
         
         C1_Layers_disponiveis = np.tile(np.arange(1,C1_NCabos+1),(num_formigas,1))
@@ -693,12 +693,12 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
                 if C1_passo == 1:
                     cidade_atual = 1
                     # '''Inicia todas as formigas em cidades aleatorias'''
-                    C1_Matriz_layer[formiga, 0] = random.choice(C1_Layers_disponiveis[formiga])
+                    # C1_Matriz_layer[formiga, 0] = random.choice(C1_Layers_disponiveis[formiga])
                     
                     C1_Matriz_cidades[formiga, C1_passo-1] = cidade_atual
 
                     # '''Define a cidade atual como a cidade aleatoria sorteada'''
-                    cabo_atual = int(C1_Matriz_layer[formiga, 0])
+                    # cabo_atual = int(C1_Matriz_layer[formiga, 0])
 
                 # '''Executa a partir da segunda cidade'''   
                 else:
@@ -709,9 +709,10 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
 
                 C1_Cidades_disponiveis[formiga] = Remover_elemento(C1_Cidades_disponiveis[formiga],cidade_atual)
 
-                    
+                C1_maior_layer_atual = max(C1_Matriz_layer[formiga])                    
+
                 '''Remove os cabos inferiores aos já escolhidos, descomentar para testar '''
-                # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+                C1_Layers_disponiveis[formiga] = np.where(C1_Layers_disponiveis[formiga] < C1_maior_layer_atual, 0, C1_Layers_disponiveis[formiga])
 
 
                 C1_Layers_disponiveis_list = (C1_Layers_disponiveis[formiga] != 0).astype(int)
@@ -740,12 +741,12 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
                 proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
                 proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
 
-                C1_Matriz_layer[formiga, C1_passo] = proximo_cabo
+                C1_Matriz_layer[formiga, C1_passo-1] = proximo_cabo
                 C1_Matriz_cidades[formiga, C1_passo] = proxima_cidade
 
                 cabo_atual = proximo_cabo
 
-        C2_Matriz_layer = np.zeros((num_formigas, C2_N_cidades_totais),dtype = int)                     # Caminho das formigas pelos layers
+        C2_Matriz_layer = np.zeros((num_formigas, C2_N_cidades_totais-1),dtype = int)                     # Caminho das formigas pelos layers
         C2_Matriz_cidades = np.zeros((num_formigas, len(C2_colunas.tolist())),dtype = int)              # Caminho das formigas pelos layers
         
         C2_Layers_disponiveis = np.tile(np.arange(1,C2_NCabos+1),(num_formigas,1))
@@ -764,12 +765,12 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
                 if C2_passo == 1:
                     cidade_atual = 1
                     # '''Inicia todas as formigas em cidades aleatorias'''
-                    C2_Matriz_layer[formiga, 0] = random.choice(C2_Layers_disponiveis[formiga])
+                    # C2_Matriz_layer[formiga, 0] = random.choice(C2_Layers_disponiveis[formiga])
                     
                     C2_Matriz_cidades[formiga, C2_passo-1] = cidade_atual
 
                     # '''Define a cidade atual como a cidade aleatoria sorteada'''
-                    cabo_atual = int(C2_Matriz_layer[formiga, 0])
+                    # cabo_atual = int(C2_Matriz_layer[formiga, 0])
 
                 # '''Executa a partir da segunda cidade'''   
                 else:
@@ -780,12 +781,12 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
 
                 C2_Cidades_disponiveis[formiga] = Remover_elemento(C2_Cidades_disponiveis[formiga],cidade_atual)
 
-
+                C2_maior_layer_atual = max(C2_Matriz_layer[formiga])  
 
 
 
                 '''Remove os cabos inferiores aos já escolhidos, descomentar para testar '''
-                # Layers_disponiveis[formiga] = np.where(Layers_disponiveis[formiga] < cabo_atual, 0, Layers_disponiveis[formiga])
+                C2_Layers_disponiveis[formiga] = np.where(C2_Layers_disponiveis[formiga] < C2_maior_layer_atual, 0, C2_Layers_disponiveis[formiga])
 
 
                 C2_Layers_disponiveis_list = (C2_Layers_disponiveis[formiga] != 0).astype(int)
@@ -813,7 +814,7 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
                 proxima_cidade = proxima_cidade + 1                                     #corrige o indice        
                 proximo_cabo = proximo_cabo + 1                                         #corrige o indice   
 
-                C2_Matriz_layer[formiga, C2_passo] = proximo_cabo
+                C2_Matriz_layer[formiga, C2_passo-1] = proximo_cabo
                 C2_Matriz_cidades[formiga, C2_passo] = proxima_cidade
 
                 cabo_atual = proximo_cabo 
@@ -824,8 +825,8 @@ with open('log_projeto_2_circuito.txt', 'w', encoding='utf-8') as arquivo_log:
         C1_delta_tau = np.zeros((C1_NCidades, C1_NCidades, C1_NCabos))
         C2_delta_tau = np.zeros((C2_NCidades, C2_NCidades, C2_NCabos))
 
-        C1_Matriz_layer = C1_Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!
-        C2_Matriz_layer = C2_Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!       
+        # C1_Matriz_layer = C1_Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!
+        # C2_Matriz_layer = C2_Matriz_layer[:, :-1]   #Remove o ultimo elemento, não necessário!       
 
 
         C1_FuncCusto          = np.zeros((num_formigas,3))
@@ -1022,16 +1023,11 @@ C2_top_melhores_iteracoes, C2_top_melhores_perdas, C2_top_melhores_custos =  mel
 Geral_top_melhores_iteracoes, Geral_top_melhores_perdas, Geral_top_melhores_custos =  melhores_resultados(Geral_dados_para_grafico,10,"C1 + C2")
 
 
-# gerar_graficos(C1_dados_para_grafico, 
-#                 num_formigas, 
-#                 C1_top_melhores_iteracoes,
-#                 C1_top_melhores_perdas,
-#                 C1_top_melhores_custos
-#                 )
 
-gerar_graficos(Geral_dados_para_grafico, 
-                num_formigas, 
-                Geral_top_melhores_iteracoes,
-                Geral_top_melhores_perdas,
-                Geral_top_melhores_custos
-                )
+
+# gerar_graficos(Geral_dados_para_grafico, 
+#                 num_formigas, 
+#                 Geral_top_melhores_iteracoes,
+#                 Geral_top_melhores_perdas,
+#                 Geral_top_melhores_custos
+#                 )
