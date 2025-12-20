@@ -65,38 +65,10 @@ class Cabo():
         else:
             comprimentos_grid = comprimentos
             potencias_grid = potencias
-        
-        # Calcular todos os resultados de uma vez
-        # correntes = self._corrente_A(potencias_grid, FP, FC)
-        # perdas_W = self._perdas_W(comprimentos_grid, potencias_grid, FP, FC)
-        # perdas_MWh_ano = self._perdas_MWh_ano(comprimentos_grid, potencias_grid, FP, FC)
         perdas_percent = self._perdas_percent(comprimentos_grid, potencias_grid, potencia_total_MW, FP,FC )
-
-        # def _perdas_percent (self, comprimento, potencia_MW, potencia_total_MW, FP, FC=1 ):
 
 
         return perdas_percent
-    # def analisar_cenario_array(self, comprimentos_array, potencias_array, potencia_total_MW, FP=0.95, FC=1):
-    #     """
-    #     Análise completa para arrays de comprimentos e potências.
-        
-    #     Returns:
-    #         dict: Resultados completos incluindo percentuais
-    #     """
-    #     resultados = self.calcular_perdas_array(comprimentos_array, potencias_array, FP, FC)
-        
-    #     # Calcular percentuais (requer potencia_total_MW como array compatível)
-    #     potencia_total_array = np.full_like(resultados['potencias'], potencia_total_MW)
-    #     resultados['perdas_percent'] = self._perdas_percent(
-    #         resultados['comprimentos'], 
-    #         resultados['potencias'], 
-    #         potencia_total_array, 
-    #         FP, 
-    #         FC
-    #     )
-        
-    #     return resultados
-
 
     def array_calcular_massa_ton(self,comprimentos_array):
         """
@@ -114,24 +86,6 @@ class Cabo():
         array_peso = comprimentos_array * peso_ton_m
 
         return array_peso
-
-
-
-
-
-
-
-
-
-# OXLIP = Cabo('CA Oxlip 4/0 AWG', 295.7, 0.3281, 0.4025, 430)
-# OXLIP._resitencia_ohm(1000)
-
-# # print(OXLIP._corrente_A(6,0.95,0.6))
-
-# # print(OXLIP._perdas_W(1000,6,0.95))
-# # print(OXLIP._perdas_MWh_ano(1000,6,0.95))
-
-
 
 
 # CABOS CADASTRADOS (INICIALIZADOS)
